@@ -55,6 +55,11 @@ function removePlayedSongFromQueue() {
     songsNamesQueue.shift()
 }
 
+function addPlayedSongToQueue(youtubeUrl, youtubeVideoName) {
+    songsQueue.push(getYoutubeVideoId(youtubeUrl))
+    songsNamesQueue.push(youtubeVideoName)
+}
+
 async function playQueue(msg) {
     // bot join vc
     const connection = joinVoiceChannel({
@@ -101,6 +106,16 @@ async function skipSong() {
     await globalPlayer.stop()
 }
 
+function isSongExistsInQueue(url) {
+    const youtubeVideoId = getYoutubeVideoId(url)
+
+    if(songsQueue.includes(youtubeVideoId)) {
+        return true
+    }
+    return false
+}
+
+
 const regexPlayCmd      = /^(\!p|\!play)\s((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
 const regexStopCmd      = /^(\!s|\!stop)$/
 const regexContinueCmd  = /^(\!c|\!continue)$/
@@ -130,7 +145,9 @@ client.on('messageCreate', async msg => {
             msg.channel.send(`Searching \`${youtubeUrl}\``)
             const youtubeVideoName = await getYoutubeVideoName(youtubeUrl)
 
-            if(!youtubeVideoName) {
+            if(isSongExistsInQueue(youtubeUrl)) {
+                msg.channel.send(`Song already exists in queue`)
+            } else if(!youtubeVideoName) {
                 msg.channel.send(`There was a problem playing \`${youtubeUrl}\``)
             } else {
                 if(songsQueue.length > 0) {
@@ -138,8 +155,8 @@ client.on('messageCreate', async msg => {
                 } else {
                     msg.channel.send(`Playing \`${youtubeVideoName}\``)
                 }
-                songsQueue.push(getYoutubeVideoId(youtubeUrl))
-                songsNamesQueue.push(youtubeVideoName)
+
+                addPlayedSongToQueue(youtubeUrl, youtubeVideoName)
 
                 if(!isBotPlayingSongs) {
                     isBotPlayingSongs = true
