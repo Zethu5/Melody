@@ -19,7 +19,7 @@ const privateJsonData = JSON.parse(privateRawData)
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_VOICE_STATES] })
 
 function getYoutubeVideoId(url) {
-    return url.match(/watch\?v=.+&/)[0].replace(/^watch\?v=/,'').replace(/\&$/,'')
+    return url.match(/watch\?v=.+?&/)[0].replace(/^watch\?v=/,'').replace(/\&$/,'')
 }
 
 async function getYoutubeVideoName(url) {
@@ -46,7 +46,13 @@ function getSongResource() {
 async function playSong(connection, player) {
     const resource = getSongResource()
     player.play(resource)
+    globalPlayer = player
     connection.subscribe(player)
+}
+
+function removePlayedSongFromQueue() {
+    songsQueue.shift()
+    songsNamesQueue.shift()
 }
 
 async function playQueue(msg) {
@@ -67,7 +73,7 @@ async function playQueue(msg) {
 
         // wait for song to finish to switch to another one
         if(player.state.status == 'idle') {
-            songsQueue.shift()
+            removePlayedSongFromQueue()
 
             // check if there is another song in the queue to switch to
             if(songsQueue.length > 0) {
@@ -83,11 +89,26 @@ async function playQueue(msg) {
     isBotPlayingSongs = false
 }
 
-const regexPlayCmd = /^(\!p|\!play)\s((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
-const regexStopCmd = /^(\!s|\!stop)$/
-const regexSkipCmd = /^(\!fs|\!skip)$/
+async function stopSong() {
+    await globalPlayer.pause()
+}
+
+async function continueSong() {
+    await globalPlayer.unpause()
+}
+
+async function skipSong() {
+    await globalPlayer.stop()
+}
+
+const regexPlayCmd      = /^(\!p|\!play)\s((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+const regexStopCmd      = /^(\!s|\!stop)$/
+const regexContinueCmd  = /^(\!c|\!continue)$/
+const regexSkipCmd      = /^(\!fs|\!skip)$/
 
 const songsQueue = []
+const songsNamesQueue = []
+let globalPlayer = null
 
 let isBotPlayingSongs = false
 
@@ -118,9 +139,9 @@ client.on('messageCreate', async msg => {
                     msg.channel.send(`Playing \`${youtubeVideoName}\``)
                 }
                 songsQueue.push(getYoutubeVideoId(youtubeUrl))
+                songsNamesQueue.push(youtubeVideoName)
 
                 if(!isBotPlayingSongs) {
-                    console.log(songsQueue)
                     isBotPlayingSongs = true
                     await playQueue(msg)
                 }
@@ -130,9 +151,14 @@ client.on('messageCreate', async msg => {
         }
 
     } else if(msgContent.match(regexStopCmd)) {
-        msg.channel.send(`\`Stopped playing song\``)
+        msg.channel.send(`Paused \`${songsNamesQueue[0]}\``)
+        await stopSong()
+    } else if (msgContent.match(regexContinueCmd)) {
+        msg.channel.send(`Continued \`${songsNamesQueue[0]}\``)
+        await continueSong()
     } else if(msgContent.match(regexSkipCmd)) {
-        msg.channel.send(`\`Skipped song\``)
+        msg.channel.send(`Skipped \`${songsNamesQueue[0]}\``)
+        await skipSong()
     }
 });
 
