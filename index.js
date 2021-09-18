@@ -155,13 +155,13 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
         let queueString = ''
 
         if(songsQueue.length - startIndex * 10 >= 10) {
-            songsNamesQueue.slice(startIndex * 10,startIndex * 10 + 10)
+            songsNamesQueue.slice(startIndex * 10, startIndex * 10 + 10)
             .map(x => queueString = queueString.concat(`**${songsNamesQueue.indexOf(x) + 1}.** \`${x}\`\n`))
         } else {
-            songsNamesQueue.slice(startIndex * 10,startIndex * 10 + songsQueue.length - startIndex * 10)
+            songsNamesQueue.slice(startIndex * 10, startIndex * 10 + songsQueue.length - startIndex * 10)
             .map(x => queueString = queueString.concat(`**${songsNamesQueue.indexOf(x) + 1}.** \`${x}\`\n`))
         }
-        
+
         embed = new MessageEmbed()
         .setColor('#0099ff')
         .setTitle('Queue')
@@ -294,8 +294,15 @@ client.on('messageCreate', async msg => {
         msg.channel.send(`\`Cleared queue\``)
     } else if(msgContent.match(regexSkipToCmd)) {
         const index = Number(msgContent.replace(/(\!st|\!skipto)\s/,''))
-        msg.channel.send(`\`Skipping to song #${index}\``)
-        await skipToSong(index - 2)
+
+        if(songsQueue.length == 0) {
+            msg.channel.send(`\`No songs in queue\``)
+        } else if(songsQueue.length < index) {
+            msg.channel.send(`\`Queue has fewer than ${index} songs - ${songsQueue.length}\``)
+        } else {
+            msg.channel.send(`\`Skipping to song #${index}\``)
+            await skipToSong(index - 2)
+        }
     }
 });
 
