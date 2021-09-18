@@ -13,7 +13,7 @@ const privateFile = 'private.json'
 const privateRawData = fs.readFileSync(privateFile)
 const privateJsonData = JSON.parse(privateRawData)
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_VOICE_STATES] })
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_VOICE_STATES] })
 
 function getYoutubeVideoId(url) {
     if(url.match(/watch\?v=.+?&/)) {
@@ -67,7 +67,7 @@ async function addPlaylistToQueue(playlistId) {
 function getSongResource() {
     const stream = ytdl(songsQueue[0], {
         filter: 'audioonly',
-        quality: 'highestaudio'
+        quality: 'lowestaudio'
     })
     
     return createAudioResource(stream)
@@ -148,6 +148,56 @@ function isSongExistsInQueue(url) {
     return false
 }
 
+async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
+    let embed = new MessageEmbed()
+
+    if(songsQueue.length > 0) {
+        let queueString = ''
+
+        if(songsQueue.length - startIndex * 10 >= 10) {
+            songsNamesQueue.slice(startIndex * 10,startIndex * 10 + 10)
+            .map(x => queueString = queueString.concat(`**${songsNamesQueue.indexOf(x) + 1}.** \`${x}\`\n`))
+        } else {
+            songsNamesQueue.slice(startIndex * 10,songsQueue.length - startIndex * 10)
+            .map(x => queueString = queueString.concat(`**${songsNamesQueue.indexOf(x) + 1}.** \`${x}\`\n`))
+        }
+
+        embed = new MessageEmbed()
+        .setColor('#0099ff')
+        .setTitle('Queue')
+        .setThumbnail('https://cdn.discordapp.com/app-icons/887726494623866920/bc81047c78e10e582253ffbffd8980bc.png')
+        .addFields(
+            { name: 'Songs', value: queueString }
+        )
+        .setTimestamp()
+    } else {
+        embed = new MessageEmbed()
+        .setColor('#0099ff')
+        .setTitle('Queue')
+        .setThumbnail('https://cdn.discordapp.com/app-icons/887726494623866920/bc81047c78e10e582253ffbffd8980bc.png')
+        .addFields(
+            { name: 'Songs', value: '\`No songs in queue\`' }
+        )
+        .setTimestamp()
+    }
+
+    if(editEmbed) {
+        await queueDisplayMsg.edit({ embeds: [embed] }).then(m => {
+            reactionUserIds.forEach(userId => {
+                m.reactions.resolve('⬅️').users.remove(userId);
+                m.reactions.resolve('➡️').users.remove(userId);
+            })
+        })
+    } else {
+        await originalMsg.channel.send({ embeds: [embed] }).then(m => {
+            m.react('⬅️')
+            m.react('➡️')
+            queueDisplayMsg = m
+            reactionUserIds = []
+        })
+    }
+}
+
 
 const regexPlayCmd      = /^(\!p|\!play)\s((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
 const regexStopCmd      = /^(\!s|\!stop)$/
@@ -157,11 +207,14 @@ const regexQueueCmd     = /^(\!q|\!queue)$/
 const regexClearCmd     = /^(\!clear)$/
 
 
+const melodyId = '887726494623866920'
 let songsQueue = []
 let songsNamesQueue = []
 let globalPlayer = null
 let isBotPlayingSongs = false
-
+let queueDisplayPageIndex = 0
+let queueDisplayMsg = null
+let reactionUserIds = []
 
 client.once('ready', () => {
     console.log("Melody Online!")
@@ -223,32 +276,29 @@ client.on('messageCreate', async msg => {
         msg.channel.send(`\`Skipped ${songsNamesQueue[0]}\``)
         await skipSong()
     } else if(msgContent.match(regexQueueCmd)) {     
-        let embed = new MessageEmbed()
-        if(songsQueue.length > 0) {
-            let songsString = ''
-            songsNamesQueue.map(x => `${songsNamesQueue.indexOf(x) + 1}. ${x}`).forEach(x => songsString = songsString.concat(`\`${x}\`\n`))
-            embed = new MessageEmbed()
-            .setColor('#0099ff')
-            .setTitle('Queue')
-            .setThumbnail('https://cdn.discordapp.com/app-icons/887726494623866920/bc81047c78e10e582253ffbffd8980bc.png')
-            .addFields(
-                { name: 'Songs', value: songsString }
-            )
-            .setTimestamp()
-        } else {
-            embed = new MessageEmbed()
-            .setColor('#0099ff')
-            .setTitle('Queue')
-            .setThumbnail('https://cdn.discordapp.com/app-icons/887726494623866920/bc81047c78e10e582253ffbffd8980bc.png')
-            .addFields(
-                { name: 'Songs', value: '\`No songs in queue\`' }
-            )
-            .setTimestamp()
-        }
-        msg.channel.send({ embeds: [embed] })
+        queueDisplayPageIndex = 0
+        sendQueueEmbededMsg(queueDisplayPageIndex,msg)
     } else if(msgContent.match(regexClearCmd)) {
         clearQueue()
         msg.channel.send(`\`Cleared queue\``)
+    }
+});
+
+client.on('messageReactionAdd', (reaction, user) => {
+    if (user.id != melodyId) {
+        if(reaction.emoji.name == '⬅️') {
+            if(queueDisplayPageIndex > 0) {
+                queueDisplayPageIndex--
+                sendQueueEmbededMsg(queueDisplayPageIndex, null, true)
+            }
+        } else if(reaction.emoji.name == '➡️') {
+            if(queueDisplayPageIndex < Number(songsQueue.length/10-1)) {
+                queueDisplayPageIndex++
+                sendQueueEmbededMsg(queueDisplayPageIndex, null, true)
+            }
+        }
+
+        reactionUserIds.push(user.id)
     }
 });
 
