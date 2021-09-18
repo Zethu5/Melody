@@ -71,8 +71,6 @@ async function playQueue(msg) {
 
     // while there are songs in queue
     while(songsQueue.length > 0) {
-        console.log(songsQueue)
-
         // wait for song to finish to switch to another one
         if(player.state.status == 'idle') {
             removePlayedSongFromQueue()
@@ -117,7 +115,7 @@ const regexPlayCmd      = /^(\!p|\!play)\s((?:https?:)?\/\/)?((?:www|m)\.)?((?:y
 const regexStopCmd      = /^(\!s|\!stop)$/
 const regexContinueCmd  = /^(\!c|\!continue)$/
 const regexSkipCmd      = /^(\!fs|\!skip)$/
-const regexQueueCmd      = /^(\!q|\!queue)$/
+const regexQueueCmd     = /^(\!q|\!queue)$/
 
 
 const songsQueue = []
