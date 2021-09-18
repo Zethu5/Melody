@@ -22,6 +22,13 @@ function getYoutubeVideoId(url) {
     return ''
 }
 
+function getYoutubePlaylistId(url) {
+    if(url.match(/list\=.+?&/)) {
+        return url.match(/list\=.+?&/)[0].replace(/^list\=/,'').replace(/\&$/,'')
+    }
+    return ''
+}
+
 async function getYoutubeVideoName(url) {
     const youtubeVideoId = getYoutubeVideoId(url)
 
@@ -37,10 +44,30 @@ async function getYoutubeVideoName(url) {
     return null
 }
 
+async function addPlaylistToQueue(playlistId) {
+    let nextPageToken = null;
+
+    do {
+        const videosResult = await google.youtube('v3').playlistItems.list({
+            key: privateJsonData.YOUTUBE_TOKEN,
+            maxResults: 50,
+            pageToken: nextPageToken,
+            part: ['snippet', 'status'],
+            playlistId: playlistId
+        })
+
+        nextPageToken = videosResult.data.nextPageToken
+
+        videosResult.data.items.forEach((video) => {
+            addSongToQueue(`https://www.youtube.com/watch?v=${video.snippet.resourceId.videoId}&`,video.snippet.title)
+        })
+    } while(nextPageToken)
+}
+
 function getSongResource() {
     const stream = ytdl(songsQueue[0], {
         filter: 'audioonly',
-        quality: 'lowestaudio'
+        quality: 'highestaudio'
     })
     
     return createAudioResource(stream)
@@ -61,6 +88,11 @@ function removePlayedSongFromQueue() {
 function addSongToQueue(youtubeUrl, youtubeVideoName) {
     songsQueue.push(getYoutubeVideoId(youtubeUrl))
     songsNamesQueue.push(youtubeVideoName)
+}
+
+function clearQueue() {
+    songsQueue = []
+    songsNamesQueue = []
 }
 
 async function playQueue(msg) {
@@ -122,6 +154,7 @@ const regexStopCmd      = /^(\!s|\!stop)$/
 const regexContinueCmd  = /^(\!c|\!continue)$/
 const regexSkipCmd      = /^(\!fs|\!skip)$/
 const regexQueueCmd     = /^(\!q|\!queue)$/
+const regexClearCmd     = /^(\!clear)$/
 
 
 const songsQueue = []
@@ -147,25 +180,33 @@ client.on('messageCreate', async msg => {
         // try to play the youtube video
         const youtubeUrl = msgContent.replace(/^(\!p|\!play)\s/,'')
         msg.channel.send(`Searching \`${youtubeUrl}\``)
-        const youtubeVideoName = await getYoutubeVideoName(youtubeUrl)
 
-        // video couldn't be reached or already exists in queue
-        if(!youtubeVideoName) {
-            msg.channel.send(`There was a problem playing \`${youtubeUrl}\``)
-            return
-        } else if(isSongExistsInQueue(youtubeUrl)) {
-            msg.channel.send(`\`${youtubeVideoName}\` already exists in queue`)
-            return
-        }
-
-        // play song or add it to queue
-        if(songsQueue.length > 0) {
-            msg.channel.send(`Added \`${youtubeVideoName}\` to queue`)
+        // url was a youtube playlist and not a single song
+        if(youtubeUrl.match(/\&list\=.+?&/)) {
+            msg.channel.send(`Detected playlist`)
+            const youtubePlaylistId = getYoutubePlaylistId(youtubeUrl)
+            await addPlaylistToQueue(youtubePlaylistId)
         } else {
-            msg.channel.send(`Playing \`${youtubeVideoName}\``)
-        }
+            const youtubeVideoName = await getYoutubeVideoName(youtubeUrl)
 
-        addSongToQueue(youtubeUrl, youtubeVideoName)
+            // video couldn't be reached or already exists in queue
+            if(!youtubeVideoName) {
+                msg.channel.send(`There was a problem playing \`${youtubeUrl}\``)
+                return
+            } else if(isSongExistsInQueue(youtubeUrl)) {
+                msg.channel.send(`\`${youtubeVideoName}\` already exists in queue`)
+                return
+            }
+
+            // play song or add it to queue
+            if(songsQueue.length > 0) {
+                msg.channel.send(`Added \`${youtubeVideoName}\` to queue`)
+            } else {
+                msg.channel.send(`Playing \`${youtubeVideoName}\``)
+            }
+
+            addSongToQueue(youtubeUrl, youtubeVideoName)
+        }
 
         // start playing queue in nothing is playing now
         if(!isBotPlayingSongs) {
@@ -204,8 +245,9 @@ client.on('messageCreate', async msg => {
             )
             .setTimestamp()
         }
-
         msg.channel.send({ embeds: [embed] })
+    } else if(msgContent.match(regexClearCmd)) {
+        clearQueue()
     }
 });
 
