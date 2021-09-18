@@ -157,8 +157,8 @@ const regexQueueCmd     = /^(\!q|\!queue)$/
 const regexClearCmd     = /^(\!clear)$/
 
 
-const songsQueue = []
-const songsNamesQueue = []
+let songsQueue = []
+let songsNamesQueue = []
 let globalPlayer = null
 let isBotPlayingSongs = false
 
@@ -179,11 +179,11 @@ client.on('messageCreate', async msg => {
 
         // try to play the youtube video
         const youtubeUrl = msgContent.replace(/^(\!p|\!play)\s/,'')
-        msg.channel.send(`Searching \`${youtubeUrl}\``)
+        msg.channel.send(`\`Searching ${youtubeUrl}\``)
 
         // url was a youtube playlist and not a single song
         if(youtubeUrl.match(/\&list\=.+?&/)) {
-            msg.channel.send(`Detected playlist`)
+            msg.channel.send(`\`Detected playlist\``)
             const youtubePlaylistId = getYoutubePlaylistId(youtubeUrl)
             await addPlaylistToQueue(youtubePlaylistId)
         } else {
@@ -191,18 +191,18 @@ client.on('messageCreate', async msg => {
 
             // video couldn't be reached or already exists in queue
             if(!youtubeVideoName) {
-                msg.channel.send(`There was a problem playing \`${youtubeUrl}\``)
+                msg.channel.send(`\`There was a problem playing ${youtubeUrl}\``)
                 return
             } else if(isSongExistsInQueue(youtubeUrl)) {
-                msg.channel.send(`\`${youtubeVideoName}\` already exists in queue`)
+                msg.channel.send(`\`${youtubeVideoName} already exists in queue`)
                 return
             }
 
             // play song or add it to queue
             if(songsQueue.length > 0) {
-                msg.channel.send(`Added \`${youtubeVideoName}\` to queue`)
+                msg.channel.send(`\`Added ${youtubeVideoName} to queue\``)
             } else {
-                msg.channel.send(`Playing \`${youtubeVideoName}\``)
+                msg.channel.send(`\`Playing ${youtubeVideoName}\``)
             }
 
             addSongToQueue(youtubeUrl, youtubeVideoName)
@@ -214,13 +214,13 @@ client.on('messageCreate', async msg => {
             await playQueue(msg)
         }
     } else if(msgContent.match(regexStopCmd)) { //pause song
-        msg.channel.send(`Paused \`${songsNamesQueue[0]}\``)
+        msg.channel.send(`\`Paused ${songsNamesQueue[0]}\``)
         await stopSong()
     } else if (msgContent.match(regexContinueCmd)) { //continue song
-        msg.channel.send(`Continued \`${songsNamesQueue[0]}\``)
+        msg.channel.send(`\`Continued ${songsNamesQueue[0]}\``)
         await continueSong()
     } else if(msgContent.match(regexSkipCmd)) { //skip song
-        msg.channel.send(`Skipped \`${songsNamesQueue[0]}\``)
+        msg.channel.send(`\`Skipped ${songsNamesQueue[0]}\``)
         await skipSong()
     } else if(msgContent.match(regexQueueCmd)) {     
         let embed = new MessageEmbed()
@@ -248,6 +248,7 @@ client.on('messageCreate', async msg => {
         msg.channel.send({ embeds: [embed] })
     } else if(msgContent.match(regexClearCmd)) {
         clearQueue()
+        msg.channel.send(`\`Cleared queue\``)
     }
 });
 
