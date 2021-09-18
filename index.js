@@ -158,10 +158,10 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
             songsNamesQueue.slice(startIndex * 10,startIndex * 10 + 10)
             .map(x => queueString = queueString.concat(`**${songsNamesQueue.indexOf(x) + 1}.** \`${x}\`\n`))
         } else {
-            songsNamesQueue.slice(startIndex * 10,songsQueue.length - startIndex * 10)
+            songsNamesQueue.slice(startIndex * 10,startIndex * 10 + songsQueue.length - startIndex * 10)
             .map(x => queueString = queueString.concat(`**${songsNamesQueue.indexOf(x) + 1}.** \`${x}\`\n`))
         }
-
+        
         embed = new MessageEmbed()
         .setColor('#0099ff')
         .setTitle('Queue')
@@ -198,6 +198,16 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
     }
 }
 
+async function skipToSong(index) {
+    const songId = songsQueue[index]
+    while(songsQueue[0] != songId) {
+        removePlayedSongFromQueue()
+    }
+
+    queueDisplayPageIndex = 0
+    await skipSong()
+}
+
 
 const regexPlayCmd      = /^(\!p|\!play)\s((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
 const regexStopCmd      = /^(\!s|\!stop)$/
@@ -205,6 +215,7 @@ const regexContinueCmd  = /^(\!c|\!continue)$/
 const regexSkipCmd      = /^(\!fs|\!skip)$/
 const regexQueueCmd     = /^(\!q|\!queue)$/
 const regexClearCmd     = /^(\!clear)$/
+const regexSkipToCmd     = /^(\!st|\!skipto)\s\d+$/
 
 
 const melodyId = '887726494623866920'
@@ -281,6 +292,10 @@ client.on('messageCreate', async msg => {
     } else if(msgContent.match(regexClearCmd)) {
         clearQueue()
         msg.channel.send(`\`Cleared queue\``)
+    } else if(msgContent.match(regexSkipToCmd)) {
+        const index = Number(msgContent.replace(/(\!st|\!skipto)\s/,''))
+        msg.channel.send(`\`Skipping to song #${index}\``)
+        await skipToSong(index - 2)
     }
 });
 
