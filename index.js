@@ -1,18 +1,15 @@
-const fs                       = require('fs')
-const { Client, Intents }      = require('discord.js')
+const fs                                = require('fs')
+const { Client, Intents, MessageEmbed } = require('discord.js')
 const {
     joinVoiceChannel,
     createAudioPlayer,
     createAudioResource
-}                              = require('@discordjs/voice');
-const { google }               = require('googleapis')
-const ytdl                     = require('ytdl-core');
-const { url }                  = require('inspector');
-const { SSL_OP_EPHEMERAL_RSA } = require('constants');
+}                                       = require('@discordjs/voice');
+const { google }                        = require('googleapis')
+const ytdl                              = require('ytdl-core');
 
 
 const privateFile = 'private.json'
-
 const privateRawData = fs.readFileSync(privateFile)
 const privateJsonData = JSON.parse(privateRawData)
 
@@ -55,7 +52,7 @@ function removePlayedSongFromQueue() {
     songsNamesQueue.shift()
 }
 
-function addPlayedSongToQueue(youtubeUrl, youtubeVideoName) {
+function addSongToQueue(youtubeUrl, youtubeVideoName) {
     songsQueue.push(getYoutubeVideoId(youtubeUrl))
     songsNamesQueue.push(youtubeVideoName)
 }
@@ -120,11 +117,12 @@ const regexPlayCmd      = /^(\!p|\!play)\s((?:https?:)?\/\/)?((?:www|m)\.)?((?:y
 const regexStopCmd      = /^(\!s|\!stop)$/
 const regexContinueCmd  = /^(\!c|\!continue)$/
 const regexSkipCmd      = /^(\!fs|\!skip)$/
+const regexQueueCmd      = /^(\!q|\!queue)$/
+
 
 const songsQueue = []
 const songsNamesQueue = []
 let globalPlayer = null
-
 let isBotPlayingSongs = false
 
 
@@ -134,48 +132,76 @@ client.once('ready', () => {
 
 client.on('messageCreate', async msg => {
     const msgContent = msg.content
-    const guild = client.guilds.cache.get(msg.guild.id)
-    const user = guild.members.cache.get(msg.member.id)
-    
+
     if(msgContent.match(regexPlayCmd)) {
         // check if user is connected to a voice channel
-        if(msg.member.voice.channel) {
-            // try to play the youtube video
-            const youtubeUrl = msgContent.replace(/^(\!p|\!play)\s/,'')
-            msg.channel.send(`Searching \`${youtubeUrl}\``)
-            const youtubeVideoName = await getYoutubeVideoName(youtubeUrl)
-
-            if(isSongExistsInQueue(youtubeUrl)) {
-                msg.channel.send(`Song already exists in queue`)
-            } else if(!youtubeVideoName) {
-                msg.channel.send(`There was a problem playing \`${youtubeUrl}\``)
-            } else {
-                if(songsQueue.length > 0) {
-                    msg.channel.send(`Added \`${youtubeVideoName}\` to queue`)
-                } else {
-                    msg.channel.send(`Playing \`${youtubeVideoName}\``)
-                }
-
-                addPlayedSongToQueue(youtubeUrl, youtubeVideoName)
-
-                if(!isBotPlayingSongs) {
-                    isBotPlayingSongs = true
-                    await playQueue(msg)
-                }
-            }
-        } else {
+        if(!msg.member.voice.channel) {
             msg.channel.send(`\`You're not connected to a voice channel\``)
+            return
         }
 
-    } else if(msgContent.match(regexStopCmd)) {
+        // try to play the youtube video
+        const youtubeUrl = msgContent.replace(/^(\!p|\!play)\s/,'')
+        msg.channel.send(`Searching \`${youtubeUrl}\``)
+        const youtubeVideoName = await getYoutubeVideoName(youtubeUrl)
+
+        // video couldn't be reached or already exists in queue
+        if(!youtubeVideoName) {
+            msg.channel.send(`There was a problem playing \`${youtubeUrl}\``)
+            return
+        } else if(isSongExistsInQueue(youtubeUrl)) {
+            msg.channel.send(`\`${youtubeVideoName}\` already exists in queue`)
+            return
+        }
+
+        // play song or add it to queue
+        if(songsQueue.length > 0) {
+            msg.channel.send(`Added \`${youtubeVideoName}\` to queue`)
+        } else {
+            msg.channel.send(`Playing \`${youtubeVideoName}\``)
+        }
+
+        addSongToQueue(youtubeUrl, youtubeVideoName)
+
+        // start playing queue in nothing is playing now
+        if(!isBotPlayingSongs) {
+            isBotPlayingSongs = true
+            await playQueue(msg)
+        }
+    } else if(msgContent.match(regexStopCmd)) { //pause song
         msg.channel.send(`Paused \`${songsNamesQueue[0]}\``)
         await stopSong()
-    } else if (msgContent.match(regexContinueCmd)) {
+    } else if (msgContent.match(regexContinueCmd)) { //continue song
         msg.channel.send(`Continued \`${songsNamesQueue[0]}\``)
         await continueSong()
-    } else if(msgContent.match(regexSkipCmd)) {
+    } else if(msgContent.match(regexSkipCmd)) { //skip song
         msg.channel.send(`Skipped \`${songsNamesQueue[0]}\``)
         await skipSong()
+    } else if(msgContent.match(regexQueueCmd)) {     
+        let embed = new MessageEmbed()
+        if(songsQueue.length > 0) {
+            let songsString = ''
+            songsNamesQueue.map(x => `${songsNamesQueue.indexOf(x) + 1}. ${x}`).forEach(x => songsString = songsString.concat(`\`${x}\`\n`))
+            embed = new MessageEmbed()
+            .setColor('#0099ff')
+            .setTitle('Queue')
+            .setThumbnail('https://cdn.discordapp.com/app-icons/887726494623866920/bc81047c78e10e582253ffbffd8980bc.png')
+            .addFields(
+                { name: 'Songs', value: songsString }
+            )
+            .setTimestamp()
+        } else {
+            embed = new MessageEmbed()
+            .setColor('#0099ff')
+            .setTitle('Queue')
+            .setThumbnail('https://cdn.discordapp.com/app-icons/887726494623866920/bc81047c78e10e582253ffbffd8980bc.png')
+            .addFields(
+                { name: 'Songs', value: '\`No songs in queue\`' }
+            )
+            .setTimestamp()
+        }
+
+        msg.channel.send({ embeds: [embed] })
     }
 });
 
