@@ -16,7 +16,10 @@ const privateJsonData = JSON.parse(privateRawData)
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_VOICE_STATES] })
 
 function getYoutubeVideoId(url) {
-    return url.match(/watch\?v=.+?&/)[0].replace(/^watch\?v=/,'').replace(/\&$/,'')
+    if(url.match(/watch\?v=.+?&/)) {
+        return url.match(/watch\?v=.+?&/)[0].replace(/^watch\?v=/,'').replace(/\&$/,'')
+    }
+    return ''
 }
 
 async function getYoutubeVideoName(url) {
@@ -28,7 +31,10 @@ async function getYoutubeVideoName(url) {
         id: youtubeVideoId
     })
 
-    return youtubeResponse.data.items[0].snippet.title
+    if(youtubeResponse.data.items.length > 0) {
+        return youtubeResponse.data.items[0].snippet.title
+    }
+    return null
 }
 
 function getSongResource() {
