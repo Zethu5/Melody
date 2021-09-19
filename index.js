@@ -7,6 +7,7 @@ const {
 }                                       = require('@discordjs/voice');
 const { google }                        = require('googleapis')
 const ytdl                              = require('ytdl-core');
+const { start } = require('repl');
 
 
 const privateFile = 'private.json'
@@ -162,13 +163,14 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
 
     if(songsQueue.length > 0) {
         let queueString = ''
+        counter = startIndex * 10 + 1
 
         if(songsQueue.length - startIndex * 10 >= 10) {
             songsNamesQueue.slice(startIndex * 10, startIndex * 10 + 10)
-            .map(x => queueString = queueString.concat(`**${songsNamesQueue.indexOf(x) + 1}.** \`${x}\`\n`))
+            .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x}\`\n`); counter++})
         } else {
             songsNamesQueue.slice(startIndex * 10, startIndex * 10 + songsQueue.length - startIndex * 10)
-            .map(x => queueString = queueString.concat(`**${songsNamesQueue.indexOf(x) + 1}.** \`${x}\`\n`))
+            .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x}\`\n`); counter++})
         }
 
         embed = new MessageEmbed()
