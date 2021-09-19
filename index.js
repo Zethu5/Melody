@@ -23,8 +23,8 @@ function getYoutubeVideoId(url) {
 }
 
 function getYoutubePlaylistId(url) {
-    if(url.match(/list\=.+?&/)) {
-        return url.match(/list\=.+?&/)[0].replace(/^list\=/,'').replace(/\&$/,'')
+    if(url.match(/[&?]list=([^&]+)/)) {
+        return url.match(/[&?]list=([^&]+)/)[0].replace(/^\&list\=/,'')
     }
     return ''
 }
@@ -44,11 +44,20 @@ async function getYoutubeVideoName(url) {
     return null
 }
 
+async function getYoutubePlaylistName(playlistId) {
+    const playlistResult = await google.youtube('v3').playlists.list({
+        key: privateJsonData.YOUTUBE_TOKEN,
+        part: 'snippet',
+        id: playlistId
+    })
+    return playlistResult.data.items[0].snippet.title
+}
+
 async function addPlaylistToQueue(playlistId) {
     let nextPageToken = null;
 
     do {
-        const videosResult = await google.youtube('v3').playlistItems.list({
+        const playlistResult = await google.youtube('v3').playlistItems.list({
             key: privateJsonData.YOUTUBE_TOKEN,
             maxResults: 50,
             pageToken: nextPageToken,
@@ -56,9 +65,9 @@ async function addPlaylistToQueue(playlistId) {
             playlistId: playlistId
         })
 
-        nextPageToken = videosResult.data.nextPageToken
+        nextPageToken = playlistResult.data.nextPageToken
 
-        videosResult.data.items.forEach((video) => {
+        playlistResult.data.items.forEach((video) => {
             addSongToQueue(`https://www.youtube.com/watch?v=${video.snippet.resourceId.videoId}&`,video.snippet.title)
         })
     } while(nextPageToken)
@@ -215,7 +224,7 @@ const regexContinueCmd  = /^(\!c|\!continue)$/
 const regexSkipCmd      = /^(\!fs|\!skip)$/
 const regexQueueCmd     = /^(\!q|\!queue)$/
 const regexClearCmd     = /^(\!clear)$/
-const regexSkipToCmd     = /^(\!st|\!skipto)\s\d+$/
+const regexSkipToCmd    = /^(\!st|\!skipto)\s\d+$/
 
 
 const melodyId = '887726494623866920'
@@ -246,9 +255,11 @@ client.on('messageCreate', async msg => {
         msg.channel.send(`\`Searching ${youtubeUrl}\``)
 
         // url was a youtube playlist and not a single song
-        if(youtubeUrl.match(/\&list\=.+?&/)) {
-            msg.channel.send(`\`Detected playlist\``)
+        if(youtubeUrl.match(/[&?]list=([^&]+)/)) {
             const youtubePlaylistId = getYoutubePlaylistId(youtubeUrl)
+            const youtubePlaylistName = await getYoutubePlaylistName(youtubePlaylistId)
+
+            msg.channel.send(`\`Playing playlist: ${youtubePlaylistName}\``)
             await addPlaylistToQueue(youtubePlaylistId)
         } else {
             const youtubeVideoName = await getYoutubeVideoName(youtubeUrl)
