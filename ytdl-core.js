@@ -1,5 +1,5 @@
-const { SONGS_QUEUE_FILE } = require('./config.json')
 const ytdl                 = require('ytdl-core');
+const discordYtdl          = require('discord-ytdl-core');
 
 const { 
     joinVoiceChannel,       
@@ -13,40 +13,43 @@ const {
     setHelperVar,
     getSongsQueueLength,
     getSongsQueue,
-    msIntoReadableTime
+    getHelperVars
 } = require('./general');
 
 const {
     getYoutubePlaylistSongs,
-    getVideoLengthInMS
+    getVideoLengthInSeconds
 } = require('./youtube');
 
 let globalPlayer = null;
 let globalConnection = null;
 
-function getSongResource(youtubeVideoId, begin=null) {
+function getSongResource(youtubeVideoId, seek=null) {
     let stream = undefined;
 
-    if(begin == null) {
+    if(seek == null) {
         stream = ytdl(youtubeVideoId, {
             filter: 'audioonly',
             quality: 'lowestaudio',
         });
     } else {
-        stream = ytdl(youtubeVideoId, {
-            filter: 'audioonly',
-            quality: 'lowestaudio',
-            begin: begin
+        stream = discordYtdl(youtubeVideoId, {
+            opusEncoded: true,
+            seek: seek
         });
     }
 
     return createAudioResource(stream);
 }
 
-async function playSong(connection, player, youtubeVideoId, begin=null) {
-    const resource = getSongResource(youtubeVideoId, begin);
+async function playSong(connection, player, youtubeVideoId, seek=null) {
+    const resource = getSongResource(youtubeVideoId, seek);
     player.play(resource);
     connection.subscribe(player);
+
+    if(seek == null) {
+        setHelperVar('positionInSong',0);
+    }
 }
 
 async function playQueue(msg) {
@@ -59,9 +62,9 @@ async function playQueue(msg) {
 
     // build player
     const player = createAudioPlayer();
-    await playSong(connection, player, getSongsQueue()[0].id)
     globalPlayer = player;
     globalConnection = connection;
+    await playSong(connection, player, getSongsQueue()[0].id)
 
     // play queue while it exists
     while(getSongsQueueLength() > 0) {
@@ -104,24 +107,40 @@ async function skipSong() {
 }
 
 async function getPlayingSongCurrentPosition() {
-    return globalPlayer.state.resource.playbackDuration;
+    return Number(globalPlayer.state.resource.playbackDuration/1000);
 }
 
 async function forwardPlayingSong(secondsToAdd) {
-    const playingSongLengthInMs      = await getVideoLengthInMS(getSongsQueue()[0].id);
+    const playingSongLengthInSeconds = await getVideoLengthInSeconds(getSongsQueue()[0].id);
     const playingSongCurrentPosition = await getPlayingSongCurrentPosition();
-    
-    if(playingSongCurrentPosition + secondsToAdd * 1000 >= playingSongLengthInMs) {
+    const { positionInSong }         = await getHelperVars()
+
+    if(positionInSong + playingSongCurrentPosition + secondsToAdd >= playingSongLengthInSeconds) {
         return false;
     }
 
-    const timeAfterForwardInMs = playingSongCurrentPosition + secondsToAdd * 1000;
-    const readableTime = msIntoReadableTime(timeAfterForwardInMs);
-    console.log(readableTime);
+    const timeAfterForwardInSeconds = Number(positionInSong + playingSongCurrentPosition + secondsToAdd);
+    setHelperVar('positionInSong', timeAfterForwardInSeconds);
+    await playSong(globalConnection,globalPlayer,getSongsQueue()[0].id,timeAfterForwardInSeconds);
 
-    playSong(globalConnection, globalPlayer, getSongsQueue()[0].id, readableTime);
     return true;
 }
+
+async function rewindPlayingSong(secondsToRewind) {
+    const playingSongCurrentPosition = await getPlayingSongCurrentPosition();
+    const { positionInSong }         = await getHelperVars()
+
+    if(positionInSong + playingSongCurrentPosition - secondsToRewind < 0) {
+        return false;
+    }
+
+    const timeAfterRewindInSeconds = positionInSong + playingSongCurrentPosition - secondsToRewind;
+    setHelperVar('positionInSong', timeAfterRewindInSeconds);
+    await playSong(globalConnection,globalPlayer,getSongsQueue()[0].id,timeAfterRewindInSeconds);
+
+    return true;
+}
+
 
 exports.getSongResource               = getSongResource;
 exports.playSong                      = playSong;
@@ -132,3 +151,4 @@ exports.continueSong                  = continueSong;
 exports.skipSong                      = skipSong;
 exports.getPlayingSongCurrentPosition = getPlayingSongCurrentPosition;
 exports.forwardPlayingSong            = forwardPlayingSong;
+exports.rewindPlayingSong             = rewindPlayingSong;

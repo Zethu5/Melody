@@ -10,7 +10,8 @@ const {
     stopSong,
     continueSong,
     skipSong,
-    forwardPlayingSong
+    forwardPlayingSong,
+    rewindPlayingSong
 } = require('./ytdl-core')
 
 const {
@@ -51,7 +52,8 @@ const {
     regexQueueCmd,
     regexClearCmd,
     regexSkipToSongCmd, 
-    regexForwardCmd
+    regexForwardCmd,
+    regexRewindCmd
 } = require('./commands');
 
 
@@ -136,8 +138,23 @@ client.on('messageCreate', async msg => {
             msg.channel.send(`\`[↪️] Skipping to song #${index}\``);
         }
     } else if(msgContent.match(regexForwardCmd)) {
-        const secondsToAdd = msgContent.replace(/^(!fw|!forward)\s/,'');
-        forwardPlayingSong(secondsToAdd);
+        const secondsToAdd = Number(msgContent.replace(/^(!fw|!forward)\s/,''));
+        const succeeded = await forwardPlayingSong(secondsToAdd);
+
+        if(!succeeded) {
+            msg.channel.send(`\`[❌] Added time exceeded song duration\``);
+        } else {
+            msg.channel.send(`\`[✔️] Forwarded ${secondsToAdd} seconds\``);
+        }
+    } else if(msgContent.match(regexRewindCmd)) {
+        const secondsToRewind = Number(msgContent.replace(/^(!rw|!rewind)\s/,''));
+        const succeeded = await rewindPlayingSong(secondsToRewind);
+
+        if(!succeeded) {
+            msg.channel.send(`\`[❌] Rewind time exceeded song beggining\``);
+        } else {
+            msg.channel.send(`\`[✔️] Rewinded ${secondsToRewind} seconds\``);
+        }
     }
 });
 

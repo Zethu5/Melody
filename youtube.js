@@ -77,18 +77,18 @@ async function getVideoMetadata(youtubeVideoId) {
     return videoMetadata;
 }
 
-async function getVideoLengthInMS(youtubeVideoId) {
+async function getVideoLengthInSeconds(youtubeVideoId) {
     const youtubeVideoMetadata = await getVideoMetadata(youtubeVideoId);
     const videoDuration = youtubeVideoMetadata.data.items[0].contentDetails.duration;
     const durationArray = videoDuration.replace(/^PT/,'').replace(/S$/,'').split(/[HM]/).map(x => Number(x));
 
     switch(durationArray.length) {
         case 3:
-            return durationArray[0] * 60 * 60 * 1000 + durationArray[1] * 60 * 1000 + durationArray[2] * 1000;
+            return durationArray[0] * 60 * 60 + durationArray[1] * 60 + durationArray[2];
         case 2:
-            return durationArray[0] * 60 * 1000 + durationArray[1] * 1000
+            return durationArray[0] * 60 + durationArray[1]
         case 1:
-            return durationArray[0] * 1000;
+            return durationArray[0];
     }
 }
 
@@ -98,4 +98,4 @@ exports.getYoutubeVideoName     = getYoutubeVideoName;
 exports.getYoutubePlaylistName  = getYoutubePlaylistName;
 exports.getYoutubePlaylistSongs = getYoutubePlaylistSongs;
 exports.getVideoMetadata        = getVideoMetadata;
-exports.getVideoLengthInMS      = getVideoLengthInMS
+exports.getVideoLengthInSeconds = getVideoLengthInSeconds
