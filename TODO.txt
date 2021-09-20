@@ -1,0 +1,3 @@
+TODO: add forward / back in a song (5 seconds back or forward for example)
+TODO: dont know the reason but begin in ytdl function doesnt get recognized
+        or something... check it out

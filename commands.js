@@ -1,0 +1,9 @@
+exports.regexPlayCmd        = /^(\!p|\!play)\s((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/;
+exports.regexStopCmd        = /^(\!s|\!stop)$/;
+exports.regexContinueCmd    = /^(\!c|\!continue)$/;
+exports.regexSkipCmd        = /^(\!fs|\!skip)$/;
+exports.regexQueueCmd       = /^(\!q|\!queue)$/;
+exports.regexClearCmd       = /^(\!clear)$/;
+exports.regexSkipToSongCmd  = /^(\!st|\!skipto)\s\d+$/;
+exports.regexForwardCmd     = /^(!fw|!forward)\s\d+$/
+exports.regexRewindCmd      = /^(!rw|!rewind)\s\d+$/
