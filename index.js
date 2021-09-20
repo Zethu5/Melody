@@ -11,7 +11,8 @@ const {
     continueSong,
     skipSong,
     forwardPlayingSong,
-    rewindPlayingSong
+    rewindPlayingSong,
+    goToTimeInPlayingSong
 } = require('./ytdl-core')
 
 const {
@@ -53,7 +54,8 @@ const {
     regexClearCmd,
     regexSkipToSongCmd, 
     regexForwardCmd,
-    regexRewindCmd
+    regexRewindCmd,
+    regexSeekCmd
 } = require('./commands');
 
 
@@ -154,6 +156,15 @@ client.on('messageCreate', async msg => {
             msg.channel.send(`\`[❌] Rewind time exceeded song beggining\``);
         } else {
             msg.channel.send(`\`[✔️] Rewinded ${secondsToRewind} seconds\``);
+        }
+    } else if(msgContent.match(regexSeekCmd)) {
+        const secondsToGoTo = Number(msgContent.replace(/^(!sk|!seek)\s/,''));
+        const succeeded = await goToTimeInPlayingSong(secondsToGoTo);
+
+        if(!succeeded) {
+            msg.channel.send(`\`[❌] Time to go to wasn't in song length range\``);
+        } else {
+            msg.channel.send(`\`[✔️] Song current play time: ${secondsToGoTo} seconds\``);
         }
     }
 });

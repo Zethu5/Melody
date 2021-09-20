@@ -7,3 +7,4 @@ exports.regexClearCmd       = /^(\!clear)$/;
 exports.regexSkipToSongCmd  = /^(\!st|\!skipto)\s\d+$/;
 exports.regexForwardCmd     = /^(!fw|!forward)\s\d+$/
 exports.regexRewindCmd      = /^(!rw|!rewind)\s\d+$/
+exports.regexSeekCmd        = /^(!sk|!seek)\s\d+$/

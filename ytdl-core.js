@@ -122,7 +122,6 @@ async function forwardPlayingSong(secondsToAdd) {
     const timeAfterForwardInSeconds = Number(positionInSong + playingSongCurrentPosition + secondsToAdd);
     setHelperVar('positionInSong', timeAfterForwardInSeconds);
     await playSong(globalConnection,globalPlayer,getSongsQueue()[0].id,timeAfterForwardInSeconds);
-
     return true;
 }
 
@@ -137,7 +136,18 @@ async function rewindPlayingSong(secondsToRewind) {
     const timeAfterRewindInSeconds = positionInSong + playingSongCurrentPosition - secondsToRewind;
     setHelperVar('positionInSong', timeAfterRewindInSeconds);
     await playSong(globalConnection,globalPlayer,getSongsQueue()[0].id,timeAfterRewindInSeconds);
+    return true;
+}
 
+async function goToTimeInPlayingSong(secondsToGoTo) {
+    const playingSongLengthInSeconds = await getVideoLengthInSeconds(getSongsQueue()[0].id);
+
+    if(secondsToGoTo > playingSongLengthInSeconds) {
+        return false;
+    }
+
+    setHelperVar('positionInSong', secondsToGoTo);
+    await playSong(globalConnection,globalPlayer,getSongsQueue()[0].id,secondsToGoTo);
     return true;
 }
 
@@ -152,3 +162,4 @@ exports.skipSong                      = skipSong;
 exports.getPlayingSongCurrentPosition = getPlayingSongCurrentPosition;
 exports.forwardPlayingSong            = forwardPlayingSong;
 exports.rewindPlayingSong             = rewindPlayingSong;
+exports.goToTimeInPlayingSong         = goToTimeInPlayingSong;
