@@ -79,16 +79,6 @@ function isSongExistsInQueue(youtubeVideoUrl) {
     return songsQueue.some(x => x.id == youtubeVideoId);
 }
 
-async function skipToSong(index) {
-    let songsQueue = getSongsQueue();
-
-    while(songsIdsQueue[0].id != songsQueue[index]) {
-        removePlayedSongFromQueue();
-    }
-
-    setHelperVar('queueDisplayPageIndex',0);
-}
-
 exports.getSongsQueue                   = getSongsQueue;
 exports.setSongsQueue                   = setSongsQueue;
 exports.initSongsQueue                  = initSongsQueue;
@@ -102,4 +92,3 @@ exports.removePlayedSongFromQueue       = removePlayedSongFromQueue;
 exports.addSongToQueue                  = addSongToQueue;
 exports.clearQueue                      = clearQueue;
 exports.isSongExistsInQueue             = isSongExistsInQueue;
-exports.skipToSong                      = skipToSong;

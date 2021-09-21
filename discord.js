@@ -98,4 +98,50 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
     }
 }
 
+async function sendHelpEmbedMsg(originalMsg) {
+    const helpString = `\
+    **!p  / !play**                    - \`Play video/playlist\`
+    **!s  / !stop**                    - \`Stop video\`
+    **!cn / !continue**                - \`Continue video\`
+    **!fs / !skip**                    - \`Skip video\`
+    **!q  / !queue**                   - \`Show queue\`
+    **!cl / !clear**                   - \`Clear queue\`
+    **!st / !skipto <song_position>**  - \`Skip to song in queue\`
+    **!fw / !forward <seconds>**       - \`Forward song\`
+    **!rw / !rewind <seconds>**        - \`Rewind song\`
+    **!sk / !seek <seconds>**          - \`Go to specific time in the song\`
+    **!np / !nowplaying**              - \`Shows currently playing song\`
+    **!h  / !help**                    - \`See this help\`
+    `
+    
+    const embed = new MessageEmbed()
+    .setColor('#0099ff')
+    .setTitle('Help')
+    .setThumbnail(MELODY_ICON)
+    .addFields(
+        { name: 'Commands', value: helpString}
+    )
+
+    originalMsg.channel.send({ embeds: [embed] });
+}
+
+async function getNowPlaying(originalMsg) {
+    const song = (await getSongsQueue())[0];
+
+    const embed = new MessageEmbed()
+    .setColor('#0099ff')
+    .setTitle('Now Playing')
+    .setThumbnail(MELODY_ICON)
+    .addFields(
+        { name: 'Song', value: song.name}
+    )
+    .addFields(
+        { name: 'Link', value: `[https://www.youtube.com/watch?v=${song.id}](https://www.youtube.com/watch?v=${song.id})`}
+    )
+
+    originalMsg.channel.send({ embeds: [embed] });
+}
+
 exports.sendQueueEmbededMsg = sendQueueEmbededMsg;
+exports.sendHelpEmbedMsg    = sendHelpEmbedMsg;
+exports.getNowPlaying       = getNowPlaying;

@@ -1,8 +1,10 @@
 const { 
     getYoutubePlaylistId, 
-    getYoutubeVideoName, 
+    getYoutubeVideoName,
+    getYoutubeVideoNameById,
     getYoutubePlaylistName, 
-    getYoutubeVideoId
+    getYoutubeVideoId,
+    getVideoByKeyWords
 } = require('./youtube')
 
 const {
@@ -11,6 +13,7 @@ const {
     stopSong,
     continueSong,
     skipSong,
+    skipToSong,
     forwardPlayingSong,
     rewindPlayingSong,
     goToTimeInPlayingSong
@@ -20,7 +23,6 @@ const {
     addSongToQueue,
     clearQueue,
     isSongExistsInQueue,
-    skipToSong,
     initSongsQueue,
     initHelperVars,
     isSongsQueueEmpty,
@@ -31,7 +33,9 @@ const {
 } = require('./general')
 
 const {
-    sendQueueEmbededMsg
+    sendQueueEmbededMsg,
+    sendHelpEmbedMsg,
+    getNowPlaying
 } = require('./discord')
 
 const { Client, Intents }         = require('discord.js');
@@ -56,7 +60,9 @@ const {
     regexSkipToSongCmd, 
     regexForwardCmd,
     regexRewindCmd,
-    regexSeekCmd
+    regexSeekCmd,
+    regexNowPlayingCmd,
+    regexHelpCmd
 } = require('./commands');
 
 
@@ -78,12 +84,12 @@ client.on('messageCreate', async msg => {
         }
 
         // try to play the youtube video
-        const youtubeUrl = msgContent.replace(/^(\!p|\!play)\s/,'');
-        msg.channel.send(`\`[🔎] Searching ${youtubeUrl}\``);
+        const search = msgContent.replace(/^(\!p|\!play)\s/,'');
+        msg.channel.send(`\`[🔎] Searching ${search}\``);
 
         // url was a youtube playlist and not a single song
-        if(youtubeUrl.match(/[&?]list=([^&]+)/)) {
-            const youtubePlaylistId = await getYoutubePlaylistId(youtubeUrl);
+        if(search.match(/[&?]list=([^&]+)/)) {
+            const youtubePlaylistId = await getYoutubePlaylistId(search);
             let youtubePlaylistName = null;
 
             if(youtubePlaylistId != null) {
@@ -94,14 +100,14 @@ client.on('messageCreate', async msg => {
                 msg.channel.send(`\`[❓] Playlist wasn't found\``);
                 return;
             }
-        } else {
-            const youtubeVideoName = await getYoutubeVideoName(youtubeUrl);
+        } else if (search.match(/\?v=.+/)){
+            const youtubeVideoName = await getYoutubeVideoName(search);
 
             // video couldn't be reached or already exists in queue
             if(!youtubeVideoName) {
                 msg.channel.send(`\`[❌] There was a problem accessing the song\``);
                 return;
-            } else if(isSongExistsInQueue(youtubeUrl)) {
+            } else if(isSongExistsInQueue(search)) {
                 msg.channel.send(`\`[♻️] ${youtubeVideoName} already exists in queue\``);
                 return;
             }
@@ -113,7 +119,25 @@ client.on('messageCreate', async msg => {
                 msg.channel.send(`\`[🎶] Playing ${youtubeVideoName}\``);
             }
 
-            addSongToQueue(getYoutubeVideoId(youtubeUrl), youtubeVideoName);
+            addSongToQueue(getYoutubeVideoId(search), youtubeVideoName);
+        } else {
+            const youtubeVideoId = await getVideoByKeyWords(search);
+
+            if(youtubeVideoId == null) {
+                msg.channel.send(`\`[❌] No video was found\``);
+                return;
+            }
+
+            const youtubeVideoName = await getYoutubeVideoNameById(youtubeVideoId);
+            
+            // play song or add it to queue
+            if(!isSongsQueueEmpty()) {
+                msg.channel.send(`\`[✔️] Added ${youtubeVideoName}\``);
+            } else {
+                msg.channel.send(`\`[🎶] Playing ${youtubeVideoName}\``);
+            }
+
+            addSongToQueue(await getVideoByKeyWords(youtubeVideoId), youtubeVideoName);
         }
 
         // start playing queue in nothing is playing now
@@ -143,7 +167,7 @@ client.on('messageCreate', async msg => {
         } else if(getSongsQueueLength() < index) {
             msg.channel.send(`\`[❗] Queue has fewer than ${index} songs - ${getSongsQueueLength}\``);
         } else {
-            await skipToSong(index - 1);
+            await skipToSong(index - 2);
             msg.channel.send(`\`[↪️] Skipping to song #${index}\``);
         }
     } else if(msgContent.match(regexForwardCmd)) {
@@ -173,6 +197,14 @@ client.on('messageCreate', async msg => {
         } else {
             msg.channel.send(`\`[✔️] Song current play time: ${secondsToGoTo} seconds\``);
         }
+    } else if (msg.content.match(regexNowPlayingCmd)) {
+        if(!isSongsQueueEmpty()) {
+            await getNowPlaying(msg);
+        } else {
+            msg.channel.send(`\`[❌] No song is currently playing\``);
+        }
+    } else if(msgContent.match(regexHelpCmd)) {
+        await sendHelpEmbedMsg(msg);
     }
 });
 

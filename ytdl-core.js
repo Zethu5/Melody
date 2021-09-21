@@ -106,6 +106,19 @@ async function skipSong() {
     await globalPlayer.stop();
 }
 
+async function skipToSong(index) {
+    let songsQueue = getSongsQueue();
+    let songId = songsQueue[index].id;
+
+    while(songsQueue[0].id != songId) {
+        removePlayedSongFromQueue();
+        songsQueue = getSongsQueue();
+    }
+
+    skipSong();
+    setHelperVar('queueDisplayPageIndex',0);
+}
+
 async function getPlayingSongCurrentPosition() {
     return Number(globalPlayer.state.resource.playbackDuration/1000);
 }
@@ -159,6 +172,7 @@ exports.addPlaylistToQueue            = addPlaylistToQueue;
 exports.stopSong                      = stopSong;
 exports.continueSong                  = continueSong;
 exports.skipSong                      = skipSong;
+exports.skipToSong                    = skipToSong;
 exports.getPlayingSongCurrentPosition = getPlayingSongCurrentPosition;
 exports.forwardPlayingSong            = forwardPlayingSong;
 exports.rewindPlayingSong             = rewindPlayingSong;
