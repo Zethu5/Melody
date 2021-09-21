@@ -20,7 +20,7 @@ function initSongsQueue() {
 
 function isSongsQueueEmpty() {
     const songsQueue = getSongsQueue();
-    return songsQueue > 0 ? true : false;
+    return songsQueue.length == 0 ? true : false;
 }
 
 function getSongsQueueLength() {

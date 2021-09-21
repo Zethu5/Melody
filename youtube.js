@@ -15,9 +15,17 @@ function getYoutubeVideoId(youtubeVideoUrl) {
     return null;
 }
 
-function getYoutubePlaylistId(youtubePlaylistUrl) {
+async function getYoutubePlaylistId(youtubePlaylistUrl) {
+    let youtubePlaylistId = null;
+
     if(youtubePlaylistUrl.match(/[&?]list=([^&]+)/)) {
-        return youtubePlaylistUrl.match(/[&?]list=([^&]+)/)[0].replace(/^\&list\=/,'');
+        youtubePlaylistId = youtubePlaylistUrl.match(/[&?]list=([^&]+)/)[0].replace(/^\&list\=/,'');
+    }
+
+    const youtubePlaylistName = await getYoutubePlaylistName(youtubePlaylistId);
+
+    if(youtubePlaylistName != null) {
+        return youtubePlaylistId;
     }
     return null;
 }
@@ -43,7 +51,11 @@ async function getYoutubePlaylistName(youtubePlaylistId) {
         part: 'snippet',
         id: youtubePlaylistId
     });
-    return playlistResult.data.items[0].snippet.title;
+
+    if(playlistResult.data.items.length > 0) {
+        return playlistResult.data.items[0].snippet.title;
+    }
+    return null;
 }
 
 async function getYoutubePlaylistSongs(youtubePlaylistId) {

@@ -1,7 +1,8 @@
 const { 
     getYoutubePlaylistId, 
     getYoutubeVideoName, 
-    getYoutubePlaylistName 
+    getYoutubePlaylistName, 
+    getYoutubeVideoId
 } = require('./youtube')
 
 const {
@@ -82,17 +83,23 @@ client.on('messageCreate', async msg => {
 
         // url was a youtube playlist and not a single song
         if(youtubeUrl.match(/[&?]list=([^&]+)/)) {
-            const youtubePlaylistId = getYoutubePlaylistId(youtubeUrl);
-            const youtubePlaylistName = await getYoutubePlaylistName(youtubePlaylistId);
+            const youtubePlaylistId = await getYoutubePlaylistId(youtubeUrl);
+            let youtubePlaylistName = null;
 
-            msg.channel.send(`\`[🎶] Playing playlist: ${youtubePlaylistName}\``);
-            await addPlaylistToQueue(youtubePlaylistId);
+            if(youtubePlaylistId != null) {
+                youtubePlaylistName = await getYoutubePlaylistName(youtubePlaylistId);
+                msg.channel.send(`\`[🎶] Playing playlist: ${youtubePlaylistName}\``);
+                await addPlaylistToQueue(youtubePlaylistId);
+            } else {
+                msg.channel.send(`\`[❓] Playlist wasn't found\``);
+                return;
+            }
         } else {
             const youtubeVideoName = await getYoutubeVideoName(youtubeUrl);
 
             // video couldn't be reached or already exists in queue
             if(!youtubeVideoName) {
-                msg.channel.send(`\`[❌] There was a problem playing ${youtubeUrl}\``);
+                msg.channel.send(`\`[❌] There was a problem accessing the song\``);
                 return;
             } else if(isSongExistsInQueue(youtubeUrl)) {
                 msg.channel.send(`\`[♻️] ${youtubeVideoName} already exists in queue\``);
@@ -106,7 +113,7 @@ client.on('messageCreate', async msg => {
                 msg.channel.send(`\`[🎶] Playing ${youtubeVideoName}\``);
             }
 
-            addSongToQueue(youtubeUrl, youtubeVideoName);
+            addSongToQueue(getYoutubeVideoId(youtubeUrl), youtubeVideoName);
         }
 
         // start playing queue in nothing is playing now

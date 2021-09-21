@@ -1,4 +1,4 @@
-exports.regexPlayCmd        = /^(\!p|\!play)\s((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/;
+exports.regexPlayCmd        = /^(\!p|\!play)\s.+$/;
 exports.regexStopCmd        = /^(\!s|\!stop)$/;
 exports.regexContinueCmd    = /^(\!c|\!continue)$/;
 exports.regexSkipCmd        = /^(\!fs|\!skip)$/;

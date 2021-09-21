@@ -20,7 +20,6 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
     let embed = new MessageEmbed();
     let songsQueue = getSongsQueue();
     let songsQueueLength = getSongsQueueLength();
-    let lastPage = false;
 
     if(songsQueueLength > 0) {
         let queueString = '';
@@ -36,7 +35,6 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
                 songsQueue
                 .slice(startIndex * 10 + 1, startIndex * 10 + songsQueueLength - startIndex * 10)
                 .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
-                lastPage = true;
             }
         } else {
             if(songsQueueLength - startIndex * 10 >= 10) {
@@ -47,27 +45,30 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
                 songsQueue
                 .slice(startIndex * 10, startIndex * 10 + songsQueueLength - startIndex * 10)
                 .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
-                lastPage = true;
             }
         }
-
 
         embed = new MessageEmbed();
 
         if(startIndex == 0) {
-            embed.addFields(
+            embed
+            .setColor('#0099ff')
+            .setTitle('Queue')
+            .setThumbnail(MELODY_ICON)
+            .addFields(
                 { name: 'Now Playing', value: `**1.** \`${songsQueue[0].name}\``}
-            );
+            )
+            .setTimestamp();
         }
 
-        embed
-        .setColor('#0099ff')
-        .setTitle('Queue')
-        .setThumbnail(MELODY_ICON)
-        .addFields(
-            { name: 'In Queue', value: queueString }
-        )
-        .setTimestamp();
+        // check if queue string is empty
+        if (queueString.trim()) {
+            embed
+            .addFields(
+                { name: 'In Queue', value: queueString }
+            )
+        }
+
     } else {
         embed = new MessageEmbed()
         .setColor('#0099ff')
