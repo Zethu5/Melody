@@ -51,14 +51,6 @@ function initHelperVars() {
     setHelperVars(helperVars);
 }
 
-function clearQueueEmbedUsersReactions(embedMsg) {
-    const { queueEmbedReactionUsersIds } = getHelperVars();
-    queueEmbedReactionUsersIds.forEach(userId => {
-        embedMsg.reactions.resolve('⬅️').users.remove(userId);
-        embedMsg.reactions.resolve('➡️').users.remove(userId);
-    });
-}
-
 function removePlayedSongFromQueue() {
     let songsQueue = getSongsQueue();
     songsQueue.shift();
@@ -106,7 +98,6 @@ exports.getHelperVars                   = getHelperVars;
 exports.setHelperVars                   = setHelperVars;
 exports.setHelperVar                    = setHelperVar;
 exports.initHelperVars                  = initHelperVars;
-exports.clearQueueEmbedUsersReactions   = clearQueueEmbedUsersReactions;
 exports.removePlayedSongFromQueue       = removePlayedSongFromQueue;
 exports.addSongToQueue                  = addSongToQueue;
 exports.clearQueue                      = clearQueue;

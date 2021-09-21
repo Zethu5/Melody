@@ -1,12 +1,26 @@
 const { MessageEmbed }  = require('discord.js');
 const { MELODY_ICON }   = require("./config.json");
 const { getSongsQueueLength, getSongsQueue, setHelperVar, getHelperVars } = require('./general');
-const { clearQueueEmbedUsersReactions } = require('./general');
+const { MELODY_ID } = require('./config.json');
+
+
+async function clearQueueEmbedUsersReactions(embedMsg) {
+    const { queueEmbedReactionUsersIds } = getHelperVars();
+    queueEmbedReactionUsersIds.forEach(userId => {
+        if(embedMsg.reactions.resolve('⬅️') != null) {
+            embedMsg.reactions.resolve('⬅️').users.remove(userId);
+        }
+        if(embedMsg.reactions.resolve('➡️') != null) {
+            embedMsg.reactions.resolve('➡️').users.remove(userId);
+        }
+    });
+}
 
 async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
     let embed = new MessageEmbed();
     let songsQueue = getSongsQueue();
     let songsQueueLength = getSongsQueueLength();
+    let lastPage = false;
 
     if(songsQueueLength > 0) {
         let queueString = '';
@@ -22,6 +36,7 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
                 songsQueue
                 .slice(startIndex * 10 + 1, startIndex * 10 + songsQueueLength - startIndex * 10)
                 .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
+                lastPage = true;
             }
         } else {
             if(songsQueueLength - startIndex * 10 >= 10) {
@@ -32,6 +47,7 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
                 songsQueue
                 .slice(startIndex * 10, startIndex * 10 + songsQueueLength - startIndex * 10)
                 .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
+                lastPage = true;
             }
         }
 
