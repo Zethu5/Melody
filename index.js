@@ -40,6 +40,7 @@ const {
 
 const { Client, Intents }         = require('discord.js');
 const { MELODY_ID, MELODY_TOKEN } = require('./config.json');
+const http                        = require('http');
 
 const client = new Client({ intents: [
         Intents.FLAGS.GUILDS, 
@@ -232,3 +233,10 @@ client.on('messageReactionAdd', (reaction, user) => {
 });
 
 client.login(MELODY_TOKEN);
+
+// for docker container...
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.write('MELODY ONLINE!');
+  res.end();
+}).listen(8080);
