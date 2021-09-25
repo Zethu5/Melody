@@ -35,11 +35,12 @@ const {
 const {
     sendQueueEmbededMsg,
     sendHelpEmbedMsg,
-    getNowPlaying
+    getNowPlaying,
+    isMsgFromDevServer
 } = require('./discord')
 
 const { Client, Intents }         = require('discord.js');
-const { MELODY_ID, MELODY_TOKEN } = require('./config.json');
+const { MELODY_ID, MELODY_TOKEN, DEV } = require('./config.json');
 const http                        = require('http');
 
 const client = new Client({ intents: [
@@ -74,6 +75,14 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async msg => {
+    // check if in development or not
+    if(DEV) {
+        const result = await isMsgFromDevServer(msg);
+        if(!result) {
+            return;
+        }
+    }
+
     let { isBotPlayingSongs, queueDisplayPageIndex } = getHelperVars()
     const msgContent = msg.content;
 
@@ -209,7 +218,7 @@ client.on('messageCreate', async msg => {
     }
 });
 
-client.on('messageReactionAdd', (reaction, user) => {
+client.on('messageReactionAdd', async (reaction, user) => {
     if (user.id != MELODY_ID) {
         let { queueDisplayPageIndex, queueEmbedReactionUsersIds } = getHelperVars();
 
@@ -227,9 +236,24 @@ client.on('messageReactionAdd', (reaction, user) => {
             }
         }
 
-        queueEmbedReactionUsersIds.push(user.id);
-        setHelperVar('queueEmbedReactionUsersIds',queueEmbedReactionUsersIds);
+        if(!queueEmbedReactionUsersIds.includes(user.id)) {
+            queueEmbedReactionUsersIds.push(user.id);
+            setHelperVar('queueEmbedReactionUsersIds',queueEmbedReactionUsersIds);
+        }
     }
 });
+
+client.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
+    if(oldVoiceState.member.id == MELODY_ID && newVoiceState.member.id == MELODY_ID) {
+        if(newVoiceState.channel) {
+            setHelperVar('isBotDisconnected', false);
+        } else if (oldVoiceState.channel) {
+            setHelperVar('isBotDisconnected', true);
+            initSongsQueue();
+            initHelperVars();
+        }
+    }
+});
+
 
 client.login(MELODY_TOKEN);

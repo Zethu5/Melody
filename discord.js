@@ -1,7 +1,6 @@
 const { MessageEmbed }  = require('discord.js');
 const { MELODY_ICON }   = require("./config.json");
 const { getSongsQueueLength, getSongsQueue, setHelperVar, getHelperVars } = require('./general');
-const { MELODY_ID } = require('./config.json');
 
 
 async function clearQueueEmbedUsersReactions(embedMsg) {
@@ -142,6 +141,16 @@ async function getNowPlaying(originalMsg) {
     originalMsg.channel.send({ embeds: [embed] });
 }
 
+async function isMsgFromDevServer(msg) {
+    const { DEV_SERVER_ID } =  require('./config.json');
+
+    if(msg.guild.id == DEV_SERVER_ID) {
+        return true;
+    }
+    return false;
+}
+
 exports.sendQueueEmbededMsg = sendQueueEmbededMsg;
 exports.sendHelpEmbedMsg    = sendHelpEmbedMsg;
 exports.getNowPlaying       = getNowPlaying;
+exports.isMsgFromDevServer  = isMsgFromDevServer;

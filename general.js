@@ -2,7 +2,7 @@ const fs                                     = require('fs');
 const { SONGS_QUEUE_FILE, HELPER_VARS_FILE } = require('./config.json');
 const {
     getYoutubeVideoId,
-} = require('./youtube')
+} = require('./youtube');
 
 
 function getSongsQueue() {
@@ -43,11 +43,13 @@ function setHelperVar(variable, value) {
 }
 
 function initHelperVars() {
-    let helperVars                           = {};
-    helperVars['isBotPlayingSongs']          = false;
-    helperVars['queueDisplayPageIndex']      = 0;
-    helperVars['queueEmbedReactionUsersIds'] = [];
-    helperVars['positionInSong']             = 0;
+    let helperVars                              = {};
+    helperVars['isBotPlayingSongs']             = false;
+    helperVars['queueDisplayPageIndex']         = 0;
+    helperVars['queueEmbedReactionUsersIds']    = [];
+    helperVars['positionInSong']                = 0;
+    helperVars['embedMsg']                      = {}
+    helperVars['isBotDisconnected']               = true;
     setHelperVars(helperVars);
 }
 

@@ -13,7 +13,9 @@ const {
     setHelperVar,
     getSongsQueueLength,
     getSongsQueue,
-    getHelperVars
+    getHelperVars,
+    initHelperVars,
+    initSongsQueue
 } = require('./general');
 
 const {
@@ -77,7 +79,14 @@ async function playQueue(msg) {
                 await playSong(connection, player, getSongsQueue()[0].id)
             }
         }
+
         await new Promise(resolve => setTimeout(resolve, 3000))
+        const { isBotDisconnected } = getHelperVars();
+
+        if (isBotDisconnected) {
+            initSongsQueue();
+            initHelperVars();
+        }
     }
 
     // disconnect and clean memory
