@@ -133,7 +133,7 @@ async function getNowPlaying(originalMsg) {
     .setTitle('Now Playing')
     .setThumbnail(MELODY_ICON)
     .addFields(
-        { name: 'Song', value: song.name}
+        { name: 'Song', value: `\`${song.name}\``}
     )
     .addFields(
         { name: 'Link', value: `[https://www.youtube.com/watch?v=${song.id}](https://www.youtube.com/watch?v=${song.id})`}
