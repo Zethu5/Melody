@@ -63,6 +63,7 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
         // check if queue string is empty
         if (queueString.trim()) {
             embed
+            .setThumbnail(MELODY_ICON)
             .addFields(
                 { name: 'In Queue', value: queueString }
             )
