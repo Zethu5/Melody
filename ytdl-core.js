@@ -68,25 +68,30 @@ async function playQueue(msg) {
     globalConnection = connection;
     await playSong(connection, player, getSongsQueue()[0].id)
 
-    // play queue while it exists
-    while(getSongsQueueLength() > 0) {
-        // wait for song to finish to switch to another one
-        if(player.state.status == 'idle') {
-            removePlayedSongFromQueue()
+    // wait for 2 minutes after becoming idle, and then exit
+    for(let i = 0; i < 40; i++) {
+        // play queue while it exists
+        while(getSongsQueueLength() > 0) {
+            // wait for song to finish to switch to another one
+            if(player.state.status == 'idle') {
+                removePlayedSongFromQueue()
 
-            // check if there is another song in the queue to switch to
-            if(getSongsQueueLength() > 0) {
-                await playSong(connection, player, getSongsQueue()[0].id)
+                // check if there is another song in the queue to switch to
+                if(getSongsQueueLength() > 0) {
+                    await playSong(connection, player, getSongsQueue()[0].id)
+                }
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 3000))
+            const { isBotDisconnected } = getHelperVars();
+
+            if (isBotDisconnected) {
+                initSongsQueue();
+                initHelperVars();
             }
         }
 
         await new Promise(resolve => setTimeout(resolve, 3000))
-        const { isBotDisconnected } = getHelperVars();
-
-        if (isBotDisconnected) {
-            initSongsQueue();
-            initHelperVars();
-        }
     }
 
     // disconnect and clean memory
