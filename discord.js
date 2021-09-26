@@ -160,9 +160,9 @@ async function isBotAloneInVC(guildId) {
     DEV ? botId = MELODY_DEV_ID : botId = MELODY_ID;
 
     const melody = client.guilds.cache.get(guildId).members.cache.get(botId);
-    const channel = client.channels.cache.get(melody.voice.channel.id);
+    const channel = client.channels.cache.get(melody?.voice?.channel?.id);
     
-    if(channel.members.size == 1) {
+    if(channel && channel.members.size == 1) {
         return true;
     }
     return false;
