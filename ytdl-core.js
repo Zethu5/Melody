@@ -15,13 +15,15 @@ const {
     getSongsQueue,
     getHelperVars,
     initHelperVars,
-    initSongsQueue
+    initSongsQueue,
+    clearQueue
 } = require('./general');
 
 const {
     getYoutubePlaylistSongs,
     getVideoLengthInSeconds
 } = require('./youtube');
+const { isBotAloneInVC } = require('./discord');
 
 let globalPlayer = null;
 let globalConnection = null;
@@ -55,6 +57,8 @@ async function playSong(connection, player, youtubeVideoId, seek=null) {
 }
 
 async function playQueue(msg) {
+    let botAloneInVcCounter = 0;
+
     // bot join vc
     const connection = joinVoiceChannel({
         channelId: msg.member.voice.channel.id,
@@ -89,6 +93,14 @@ async function playQueue(msg) {
                 initSongsQueue();
                 initHelperVars();
             }
+
+            // meaning 30 seconds have passed and bot was all alone
+            if(botAloneInVcCounter == 10) {
+                clearQueue('clear');
+                await skipSong();
+            }
+
+            isBotAloneInVC(msg.guild.id) ? botAloneInVcCounter++ : botAloneInVcCounter = 0; 
         }
 
         await new Promise(resolve => setTimeout(resolve, 3000))

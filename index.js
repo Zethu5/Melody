@@ -74,7 +74,7 @@ client.once('ready', () => {
     DEV ? console.log("Melody DEV Online!"): console.log("Melody Online!");
 });
 
-client.on('messageCreate', async msg => {
+client.on('messageCreate', async msg => {    
     // check if in development or not
     if(DEV) {
         const result = await isMsgFromDevServer(msg);
@@ -257,4 +257,10 @@ client.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
 });
 
 
-DEV ? client.login(MELODY_DEV_TOKEN) : client.login(MELODY_TOKEN);
+if(DEV){
+    setHelperVar('client',client);
+    client.login(MELODY_DEV_TOKEN);
+} else {
+    setHelperVar('client',client);
+    client.login(MELODY_TOKEN);    
+}

@@ -143,9 +143,26 @@ async function getNowPlaying(originalMsg) {
 }
 
 async function isMsgFromDevServer(msg) {
-    const { DEV_SERVER_ID } =  require('./config.json');
+    const { DEV_SERVER_ID } = require('./config.json');
 
     if(msg.guild.id == DEV_SERVER_ID) {
+        return true;
+    }
+    return false;
+}
+
+async function isBotAloneInVC(guildId) {
+    // <VoiceChannel>.members.size
+    const { client } = getHelperVars();
+    const { DEV, MELODY_ID, MELODY_DEV_ID } = require('./config.json');
+
+    let botId = undefined;
+    DEV ? botId = MELODY_DEV_ID : botId = MELODY_ID;
+
+    const melody = client.guilds.cache.get(guildId).members.cache.get(botId);
+    const channel = client.channels.cache.get(melody.voice.channel.id);
+    
+    if(channel.members.size == 1) {
         return true;
     }
     return false;
@@ -155,3 +172,4 @@ exports.sendQueueEmbededMsg = sendQueueEmbededMsg;
 exports.sendHelpEmbedMsg    = sendHelpEmbedMsg;
 exports.getNowPlaying       = getNowPlaying;
 exports.isMsgFromDevServer  = isMsgFromDevServer;
+exports.isBotAloneInVC      = isBotAloneInVC;

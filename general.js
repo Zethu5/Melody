@@ -49,7 +49,8 @@ function initHelperVars() {
     helperVars['queueEmbedReactionUsersIds']    = [];
     helperVars['positionInSong']                = 0;
     helperVars['embedMsg']                      = {}
-    helperVars['isBotDisconnected']               = true;
+    helperVars['isBotDisconnected']             = true;
+    helperVars['client']                        = {};
     setHelperVars(helperVars);
 }
 
