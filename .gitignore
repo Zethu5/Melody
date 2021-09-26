@@ -6,3 +6,4 @@ helperVars.json
 songsQueue.json
 .gitignore
 Dockerfile
+test.js
