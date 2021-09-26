@@ -96,11 +96,13 @@ async function playQueue(msg) {
 
             // meaning 30 seconds have passed and bot was all alone
             if(botAloneInVcCounter == 10) {
+                botAloneInVcCounter = 0;
                 clearQueue('clear');
                 await skipSong();
             }
 
-            isBotAloneInVC(msg.guild.id) ? botAloneInVcCounter++ : botAloneInVcCounter = 0; 
+            const isBotAlone = await isBotAloneInVC(msg.guild.id);
+            isBotAlone ? botAloneInVcCounter++ : botAloneInVcCounter = 0;
         }
 
         await new Promise(resolve => setTimeout(resolve, 3000))
