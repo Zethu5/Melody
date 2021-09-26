@@ -92,6 +92,14 @@ async function playQueue(msg) {
         }
 
         await new Promise(resolve => setTimeout(resolve, 3000))
+
+        if(getSongsQueueLength() > 0) {
+            globalPlayer = player;
+            globalConnection = connection;
+            await playSong(connection, player, getSongsQueue()[0].id)
+        } else {
+            setHelperVar('isBotPlayingSongs', false);
+        }
     }
 
     // disconnect and clean memory
