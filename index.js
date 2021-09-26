@@ -40,7 +40,7 @@ const {
 } = require('./discord')
 
 const { Client, Intents }         = require('discord.js');
-const { MELODY_ID, MELODY_TOKEN, DEV } = require('./config.json');
+const { MELODY_ID, MELODY_DEV_ID, MELODY_TOKEN, MELODY_DEV_TOKEN, DEV } = require('./config.json');
 const http                        = require('http');
 
 const client = new Client({ intents: [
@@ -71,7 +71,7 @@ const {
 client.once('ready', () => {
     initSongsQueue();
     initHelperVars();
-    console.log("Melody Online!");
+    DEV ? console.log("Melody DEV Online!"): console.log("Melody Online!");
 });
 
 client.on('messageCreate', async msg => {
@@ -219,7 +219,7 @@ client.on('messageCreate', async msg => {
 });
 
 client.on('messageReactionAdd', async (reaction, user) => {
-    if (user.id != MELODY_ID) {
+    if (user.id != MELODY_ID && user.id != MELODY_DEV_ID) {
         let { queueDisplayPageIndex, queueEmbedReactionUsersIds } = getHelperVars();
 
         if(reaction.emoji.name == '⬅️') {
@@ -244,7 +244,8 @@ client.on('messageReactionAdd', async (reaction, user) => {
 });
 
 client.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
-    if(oldVoiceState.member.id == MELODY_ID && newVoiceState.member.id == MELODY_ID) {
+    if(oldVoiceState.member.id == MELODY_ID && newVoiceState.member.id == MELODY_ID ||
+        oldVoiceState.member.id == MELODY_DEV_ID && newVoiceState.member.id == MELODY_DEV_ID) {
         if(newVoiceState.channel) {
             setHelperVar('isBotDisconnected', false);
         } else if (oldVoiceState.channel) {
@@ -256,4 +257,4 @@ client.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
 });
 
 
-client.login(MELODY_TOKEN);
+DEV ? client.login(MELODY_DEV_TOKEN) : client.login(MELODY_TOKEN);
