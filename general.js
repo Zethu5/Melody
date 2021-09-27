@@ -51,6 +51,7 @@ function initHelperVars() {
     helperVars['embedMsg']                      = {}
     helperVars['isBotDisconnected']             = true;
     helperVars['client']                        = {};
+    helperVars['isLoopingEnabled']              = false;
     setHelperVars(helperVars);
 }
 

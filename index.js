@@ -16,7 +16,8 @@ const {
     skipToSong,
     forwardPlayingSong,
     rewindPlayingSong,
-    goToTimeInPlayingSong
+    goToTimeInPlayingSong,
+    loop
 } = require('./ytdl-core')
 
 const {
@@ -64,7 +65,8 @@ const {
     regexRewindCmd,
     regexSeekCmd,
     regexNowPlayingCmd,
-    regexHelpCmd
+    regexHelpCmd,
+    regexLoopCmd
 } = require('./commands');
 
 
@@ -152,6 +154,7 @@ client.on('messageCreate', async msg => {
 
         // start playing queue in nothing is playing now
         if(!isBotPlayingSongs) {
+            console.log('[INFO] Started playing queue');
             setHelperVar('isBotPlayingSongs', true);
             await playQueue(msg);
         }
@@ -207,12 +210,16 @@ client.on('messageCreate', async msg => {
         } else {
             msg.channel.send(`\`[✔️] Song current play time: ${secondsToGoTo} seconds\``);
         }
-    } else if (msg.content.match(regexNowPlayingCmd)) {
+    } else if(msg.content.match(regexNowPlayingCmd)) {
         if(!isSongsQueueEmpty()) {
             await getNowPlaying(msg);
         } else {
             msg.channel.send(`\`[❌] No song is currently playing\``);
         }
+    } else if(msg.content.match(regexLoopCmd)) {
+        await loop(msg);
+        const { isLoopingEnabled } = getHelperVars();
+        isLoopingEnabled ? msg.channel.send(`\`Looping enabled\``) : msg.channel.send(`\`Looping disabled\``);
     } else if(msgContent.match(regexHelpCmd)) {
         await sendHelpEmbedMsg(msg);
     }

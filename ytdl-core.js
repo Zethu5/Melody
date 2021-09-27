@@ -23,7 +23,11 @@ const {
     getYoutubePlaylistSongs,
     getVideoLengthInSeconds
 } = require('./youtube');
-const { isBotAloneInVC } = require('./discord');
+
+const { 
+    isBotAloneInVC,
+    sendLoopMsg
+} = require('./discord');
 
 let globalPlayer = null;
 let globalConnection = null;
@@ -71,6 +75,7 @@ async function playQueue(msg) {
     globalPlayer = player;
     globalConnection = connection;
     await playSong(connection, player, getSongsQueue()[0].id)
+    console.log(`[INFO] Playing song: ${getSongsQueue()[0].name}`)
 
     // wait for 2 minutes after becoming idle, and then exit
     for(let i = 0; i < 40; i++) {
@@ -78,11 +83,14 @@ async function playQueue(msg) {
         while(getSongsQueueLength() > 0) {
             // wait for song to finish to switch to another one
             if(player.state.status == 'idle') {
-                removePlayedSongFromQueue()
+                console.log(`[INFO] Player is idle`)
+                const { isLoopingEnabled } = getHelperVars();
+                !isLoopingEnabled ? removePlayedSongFromQueue() : console.log('[INFO] Looping is enabled');
 
                 // check if there is another song in the queue to switch to
                 if(getSongsQueueLength() > 0) {
                     await playSong(connection, player, getSongsQueue()[0].id)
+                    console.log(`[INFO] Playing song: ${getSongsQueue()[0].name}`)
                 }
             }
 
@@ -90,12 +98,14 @@ async function playQueue(msg) {
             const { isBotDisconnected } = getHelperVars();
 
             if (isBotDisconnected) {
+                console.log(`[WARN] Bot disconnected`)
                 initSongsQueue();
                 initHelperVars();
             }
 
             // meaning 30 seconds have passed and bot was all alone
             if(botAloneInVcCounter == 10) {
+                console.log(`[WARN] Bot was alone in vc for 30 seconds`)
                 botAloneInVcCounter = 0;
                 clearQueue('clear');
                 await skipSong();
@@ -108,6 +118,7 @@ async function playQueue(msg) {
         await new Promise(resolve => setTimeout(resolve, 3000))
 
         if(getSongsQueueLength() > 0) {
+            console.log(`[INFO] Returning to playing queue`)
             globalPlayer = player;
             globalConnection = connection;
             await playSong(connection, player, getSongsQueue()[0].id)
@@ -200,6 +211,12 @@ async function goToTimeInPlayingSong(secondsToGoTo) {
     return true;
 }
 
+async function loop(msg) {
+    let { isLoopingEnabled } = getHelperVars();
+    isLoopingEnabled = !isLoopingEnabled;
+    setHelperVar('isLoopingEnabled', isLoopingEnabled);
+}
+
 
 exports.getSongResource               = getSongResource;
 exports.playSong                      = playSong;
@@ -213,3 +230,4 @@ exports.getPlayingSongCurrentPosition = getPlayingSongCurrentPosition;
 exports.forwardPlayingSong            = forwardPlayingSong;
 exports.rewindPlayingSong             = rewindPlayingSong;
 exports.goToTimeInPlayingSong         = goToTimeInPlayingSong;
+exports.loop                          = loop;
