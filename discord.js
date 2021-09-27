@@ -111,6 +111,7 @@ async function sendHelpEmbedMsg(originalMsg) {
     **!rw / !rewind <seconds>**        - \`Rewind song\`
     **!sk / !seek <seconds>**          - \`Go to specific time in the song\`
     **!np / !nowplaying**              - \`Shows currently playing song\`
+    **!lp / !loop**                    - \`Loops song\`
     **!h  / !help**                    - \`See this help\`
     `
     
