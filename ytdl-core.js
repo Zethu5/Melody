@@ -162,7 +162,7 @@ async function skipToSong(index) {
         songsQueue = getSongsQueue();
     }
 
-    skipSong();
+    await skipSong();
     setHelperVar('queueDisplayPageIndex',0);
 }
 
