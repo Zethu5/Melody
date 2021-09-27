@@ -73,6 +73,17 @@ const {
 client.once('ready', () => {
     initSongsQueue();
     initHelperVars();
+
+    const melodyStatuses = ['Developed by Zethus', '!help'];
+    let index = 0;
+
+    setInterval(() => {
+        if(index === melodyStatuses.length) index = 0;
+        const status = melodyStatuses[index];
+        client.user.setActivity(status);
+        index++;
+    }, 5000);
+
     DEV ? console.log("Melody DEV Online!"): console.log("Melody Online!");
 });
 
