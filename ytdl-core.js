@@ -129,7 +129,7 @@ async function playQueue(msg) {
 
     // disconnect and clean memory
     player.stop();
-    connection.destroy();
+    if (connection.state.status != 'destroyed') connection.destroy();
     setHelperVar('isBotPlayingSongs', false);
 }
 
