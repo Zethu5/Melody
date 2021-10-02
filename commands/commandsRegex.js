@@ -1,6 +1,6 @@
 exports.regexPlayCmd        = /^(\!p|\!play)\s.+$/;
 exports.regexStopCmd        = /^(\!s|\!stop)$/;
-exports.regexContinueCmd    = /^(\!cn|\!continue)$/;
+exports.regexResumeCmd      = /^(\!rs|\!resume)$/;
 exports.regexSkipCmd        = /^(\!fs|\!skip)$/;
 exports.regexQueueCmd       = /^(\!q|\!queue)$/;
 exports.regexClearCmd       = /^(\!cl|\!clear)$/;

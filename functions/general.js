@@ -1,8 +1,19 @@
-const fs                                     = require('fs');
-const { SONGS_QUEUE_FILE, HELPER_VARS_FILE } = require('./config.json');
+const fs = require('fs');
+const CONFIG_FILE = '../config.json';
+
+let { 
+    SONGS_QUEUE_FILE,
+    HELPER_VARS_FILE
+} = require(CONFIG_FILE);
+
 const {
     getYoutubeVideoId,
 } = require('./youtube');
+
+
+// relative path correction
+SONGS_QUEUE_FILE = `${__dirname}/../${SONGS_QUEUE_FILE}`;
+HELPER_VARS_FILE = `${__dirname}/../${HELPER_VARS_FILE}`;
 
 
 function getSongsQueue() {

@@ -1,6 +1,23 @@
 const { MessageEmbed }  = require('discord.js');
-const { MELODY_ICON }   = require("./config.json");
-const { getSongsQueueLength, getSongsQueue, setHelperVar, getHelperVars } = require('./general');
+const CONFIG_FILE       = '../config.json';
+
+const {
+    DEV,
+    MELODY_ICON,
+    MELODY_ID,
+    MELODY_DEV_ID,
+    MELODY_TOKEN,
+    MELODY_DEV_TOKEN
+} = require(CONFIG_FILE);
+
+const { 
+    getSongsQueueLength,
+    getSongsQueue,
+    setHelperVar,
+    getHelperVars,
+    initSongsQueue,
+    initHelperVars
+} = require('./general');
 
 
 async function clearQueueEmbedUsersReactions(embedMsg) {
@@ -100,10 +117,10 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
 
 async function sendHelpEmbedMsg(originalMsg) {
     const helpString = `\
-    **!p  / !play**                    - \`Play video/playlist\`
-    **!s  / !stop**                    - \`Stop video\`
-    **!cn / !continue**                - \`Continue video\`
-    **!fs / !skip**                    - \`Skip video\`
+    **!p  / !play**                    - \`Play song/playlist\`
+    **!s  / !stop**                    - \`Stop song\`
+    **!rs / !resume**                  - \`Resumes song\`
+    **!fs / !skip**                    - \`Skip song\`
     **!q  / !queue**                   - \`Show queue\`
     **!cl / !clear**                   - \`Clear queue\`
     **!st / !skipto <song_position>**  - \`Skip to song in queue\`
@@ -144,7 +161,7 @@ async function getNowPlaying(originalMsg) {
 }
 
 async function isMsgFromDevServer(msg) {
-    const { DEV_SERVER_ID } = require('./config.json');
+    const { DEV_SERVER_ID } = require(CONFIG_FILE);
 
     if(msg.guild.id == DEV_SERVER_ID) {
         return true;
@@ -155,7 +172,7 @@ async function isMsgFromDevServer(msg) {
 async function isBotAloneInVC(guildId) {
     // <VoiceChannel>.members.size
     const { client } = getHelperVars();
-    const { DEV, MELODY_ID, MELODY_DEV_ID } = require('./config.json');
+    const { DEV, MELODY_ID, MELODY_DEV_ID } = require(CONFIG_FILE);
 
     let botId = undefined;
     DEV ? botId = MELODY_DEV_ID : botId = MELODY_ID;
@@ -169,8 +186,70 @@ async function isBotAloneInVC(guildId) {
     return false;
 }
 
+async function swapMelodyStatus(client) {
+    const melodyStatuses = ['Developed by Zethus', '!help'];
+    let index = 0;
+
+    setInterval(() => {
+        if(index === melodyStatuses.length) index = 0;
+        const status = melodyStatuses[index];
+        client.user.setActivity(status);
+        index++;
+    }, 5000);
+}
+
+async function queueSkimPages(reaction, user) {
+    if (user.id != MELODY_ID && user.id != MELODY_DEV_ID) {
+        let { queueDisplayPageIndex, queueEmbedReactionUsersIds } = getHelperVars();
+
+        if(reaction.emoji.name == '⬅️') {
+            if(queueDisplayPageIndex > 0) {
+                sendQueueEmbededMsg(--queueDisplayPageIndex, null, true);
+                setHelperVar('queueDisplayPageIndex',queueDisplayPageIndex);
+            }
+        } else if(reaction.emoji.name == '➡️') {
+            if(queueDisplayPageIndex < Number(getSongsQueueLength()/10-1)) {
+                sendQueueEmbededMsg(++queueDisplayPageIndex, null, true);
+                setHelperVar('queueDisplayPageIndex',queueDisplayPageIndex);
+            }
+        }
+
+        if(!queueEmbedReactionUsersIds.includes(user.id)) {
+            queueEmbedReactionUsersIds.push(user.id);
+            setHelperVar('queueEmbedReactionUsersIds',queueEmbedReactionUsersIds);
+        }
+    }
+}
+
+async function setMelodyStatus(oldVoiceState, newVoiceState) {
+    if(oldVoiceState.member.id == MELODY_ID && newVoiceState.member.id == MELODY_ID ||
+        oldVoiceState.member.id == MELODY_DEV_ID && newVoiceState.member.id == MELODY_DEV_ID) {
+        if(newVoiceState.channel) {
+            setHelperVar('isBotDisconnected', false);
+        } else if (oldVoiceState.channel) {
+            setHelperVar('isBotDisconnected', true);
+            initSongsQueue();
+            initHelperVars();
+        }
+    }
+}
+
+function clientLogin(client) {
+    if(DEV){
+        setHelperVar('client',client);
+        client.login(MELODY_DEV_TOKEN);
+    } else {
+        setHelperVar('client',client);
+        client.login(MELODY_TOKEN);    
+    }
+}
+
 exports.sendQueueEmbededMsg = sendQueueEmbededMsg;
 exports.sendHelpEmbedMsg    = sendHelpEmbedMsg;
 exports.getNowPlaying       = getNowPlaying;
 exports.isMsgFromDevServer  = isMsgFromDevServer;
 exports.isBotAloneInVC      = isBotAloneInVC;
+exports.swapMelodyStatus    = swapMelodyStatus;
+exports.queueSkimPages      = queueSkimPages;
+exports.setMelodyStatus     = setMelodyStatus;
+exports.clientLogin         = clientLogin;

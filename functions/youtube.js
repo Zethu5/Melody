@@ -1,6 +1,7 @@
 const ytdl              = require('ytdl-core');
 const { google }        = require('googleapis');
-const { YOUTUBE_TOKEN } = require('./config.json')
+const CONFIG_FILE       = '../config.json';
+const { YOUTUBE_TOKEN } = require(CONFIG_FILE)
 
 function getYoutubeVideoId(youtubeVideoUrl) {
     if(ytdl.validateURL(youtubeVideoUrl)) {
