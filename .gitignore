@@ -1,6 +1,5 @@
 private.json
 node_modules/*
-ytdl-core.js
 config.json
 helperVars.json
 songsQueue.json
