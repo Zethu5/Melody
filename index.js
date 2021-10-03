@@ -1,11 +1,11 @@
 const {
     initSongsQueue,
     initHelperVars,
-} = require('./general')
+} = require('./functions/general')
 
 const {
     isMsgFromDevServer
-} = require('./discord')
+} = require('./functions/discord')
 
 const { Client, Intents } = require('discord.js');
 const { DEV } = require('./config.json');

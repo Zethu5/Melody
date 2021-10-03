@@ -94,13 +94,10 @@ function isSongExistsInQueue(youtubeVideoUrl) {
     return songsQueue.some(x => x.id == youtubeVideoId);
 }
 
-<<<<<<< HEAD
 function base64Encode(str) {
     return Buffer.from(str).toString('base64');
 }
 
-=======
->>>>>>> 79fccfed628d35af2d49802b0d9f4f4ada5c5386
 exports.getSongsQueue                   = getSongsQueue;
 exports.setSongsQueue                   = setSongsQueue;
 exports.initSongsQueue                  = initSongsQueue;
@@ -113,9 +110,5 @@ exports.initHelperVars                  = initHelperVars;
 exports.removePlayedSongFromQueue       = removePlayedSongFromQueue;
 exports.addSongToQueue                  = addSongToQueue;
 exports.clearQueue                      = clearQueue;
-<<<<<<< HEAD
 exports.isSongExistsInQueue             = isSongExistsInQueue;
 exports.base64Encode                    = base64Encode;
-=======
-exports.isSongExistsInQueue             = isSongExistsInQueue;
->>>>>>> 79fccfed628d35af2d49802b0d9f4f4ada5c5386
