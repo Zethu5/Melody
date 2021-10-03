@@ -21,6 +21,7 @@
   "homepage": "https://github.com/Zethu5/Melody#readme",
   "dependencies": {
     "@discordjs/voice": "^0.6.0",
+    "axios": "^0.22.0",
     "discord-ytdl-core": "^5.0.4",
     "discord.js": "^13.1.0",
     "ffmpeg": "^0.0.4",
