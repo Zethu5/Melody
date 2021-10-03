@@ -244,6 +244,7 @@ function clientLogin(client) {
     }
 }
 
+<<<<<<< HEAD
 async function queueReactionHandler(reaction, user) {
     if (user.id != MELODY_ID && user.id != MELODY_DEV_ID) {
         let { queueDisplayPageIndex, queueEmbedReactionUsersIds } = getHelperVars();
@@ -314,3 +315,14 @@ exports.clientLogin             = clientLogin;
 exports.queueReactionHandler    = queueReactionHandler;
 exports.voiceStateUpdateHandler = voiceStateUpdateHandler;
 exports.swapMelodyActivity      = swapMelodyActivity;
+=======
+exports.sendQueueEmbededMsg = sendQueueEmbededMsg;
+exports.sendHelpEmbedMsg    = sendHelpEmbedMsg;
+exports.getNowPlaying       = getNowPlaying;
+exports.isMsgFromDevServer  = isMsgFromDevServer;
+exports.isBotAloneInVC      = isBotAloneInVC;
+exports.swapMelodyStatus    = swapMelodyStatus;
+exports.queueSkimPages      = queueSkimPages;
+exports.setMelodyStatus     = setMelodyStatus;
+exports.clientLogin         = clientLogin;
+>>>>>>> 79fccfed628d35af2d49802b0d9f4f4ada5c5386

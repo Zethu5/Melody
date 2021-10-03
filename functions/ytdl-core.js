@@ -199,7 +199,10 @@ async function rewindPlayingSong(secondsToRewind) {
 }
 
 async function goToTimeInPlayingSong(secondsToGoTo) {
+<<<<<<< HEAD
     if(getSongsQueueLength() == 0) return false;
+=======
+>>>>>>> 79fccfed628d35af2d49802b0d9f4f4ada5c5386
     const playingSongLengthInSeconds = await getVideoLengthInSeconds(getSongsQueue()[0].id);
 
     if(secondsToGoTo > playingSongLengthInSeconds) {

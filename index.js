@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const {
     initSongsQueue,
     initHelperVars,
@@ -7,6 +8,8 @@ const {
     isMsgFromDevServer
 } = require('./discord')
 
+=======
+>>>>>>> 79fccfed628d35af2d49802b0d9f4f4ada5c5386
 const { Client, Intents } = require('discord.js');
 const { DEV } = require('./config.json');
 
@@ -34,7 +37,7 @@ client.once('ready', async () => {
     DEV ? console.log("Melody DEV Online!"): console.log("Melody Online!");
 });
 
-client.on('messageCreate', async msg => {    
+client.on('messageCreate', async msg => {
     // check if in development or not
     if(DEV) {
         const result = await isMsgFromDevServer(msg);
@@ -43,6 +46,7 @@ client.on('messageCreate', async msg => {
         }
     }
 
+<<<<<<< HEAD
     await(commandsHandler(msg));
 });
 
@@ -55,4 +59,17 @@ client.on('voiceStateUpdate', async (oldVoiceState, newVoiceState) => {
 });
 
 
+=======
+    await commandsHandler(msg);
+});
+
+client.on('messageReactionAdd', async (reaction, user) => {
+    await queueSkimPages(reaction, user);
+});
+
+client.on('voiceStateUpdate', async (oldVoiceState, newVoiceState) => {
+    await setMelodyStatus(oldVoiceState, newVoiceState);
+});
+
+>>>>>>> 79fccfed628d35af2d49802b0d9f4f4ada5c5386
 clientLogin(client);
