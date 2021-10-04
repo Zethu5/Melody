@@ -32,7 +32,7 @@ async function getSpotifyAuthToken() {
 }
 
 async function getSpotifyTrackIdFromUrl(spotifyUrl) {
-    if(spotifyUrl.match(/\/track\/.+?\?/)) {
+    if(spotifyUrl.match(/\/track\/.+\??/)) {
         return spotifyUrl.match(/\/track\/.+?\?/)[0].replace(/\/track\//,'').replace('\?','');
     }
 }
@@ -52,6 +52,53 @@ async function getSpotifyTrack(spotifyTrackId) {
     }
 }
 
-exports.getSpotifyAuthToken         = getSpotifyAuthToken;
-exports.getSpotifyTrack             = getSpotifyTrack;
-exports.getSpotifyTrackIdFromUrl    = getSpotifyTrackIdFromUrl;
+function getSpotifyPlaylistIdFromUrl(spotifyUrl) {
+    if(spotifyUrl.match(/open\.spotify\.com\/playlist\/[a-zA-Z0-9]+/)) {
+        return spotifyUrl.match(/open\.spotify\.com\/playlist\/[a-zA-Z0-9]+/)[0].replace(/open\.spotify\.com\/playlist\//,'');
+    }
+    return null;
+}
+
+async function getSpotifyPlaylistNameById(spotifyPlaylistId) {
+    try {
+        const spotifyToken = await getSpotifyAuthToken();
+        const response = await axios.get(`https://api.spotify.com/v1/playlists/${spotifyPlaylistId}`, {
+            headers: { 
+                'Authorization': `Bearer ${spotifyToken}`,
+            }
+        });
+        return response.data.name;
+    } catch(error) {
+        console.log(error);
+        return null;
+    }
+}
+
+async function getSpotifyPlaylistTracksById(spotifyPlaylistId) {
+    try {
+        const spotifyToken = await getSpotifyAuthToken();
+        const response = await axios.get(`https://api.spotify.com/v1/playlists/${spotifyPlaylistId}`, {
+            headers: { 
+                'Authorization': `Bearer ${spotifyToken}`,
+            }
+        });
+
+        return response.data.tracks.items.map(function(track) {
+            var trackInfo = {
+                id: track.track.id,
+                name: track.track.name,
+            }
+            return trackInfo;
+        });
+    } catch(error) {
+        console.log(error);
+        return null;
+    }
+}
+
+exports.getSpotifyAuthToken             = getSpotifyAuthToken;
+exports.getSpotifyTrack                 = getSpotifyTrack;
+exports.getSpotifyTrackIdFromUrl        = getSpotifyTrackIdFromUrl;
+exports.getSpotifyPlaylistIdFromUrl     = getSpotifyPlaylistIdFromUrl;
+exports.getSpotifyPlaylistNameById      = getSpotifyPlaylistNameById;
+exports.getSpotifyPlaylistTracksById    = getSpotifyPlaylistTracksById;

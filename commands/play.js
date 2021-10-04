@@ -22,7 +22,10 @@ const {
 
 const { 
     getSpotifyTrackIdFromUrl,
-    getSpotifyTrack
+    getSpotifyTrack,
+    getSpotifyPlaylistTracksById,
+    getSpotifyPlaylistIdFromUrl,
+    getSpotifyPlaylistNameById
 } = require("../functions/spotify");
 
 function determinePlayType(search) {
@@ -30,7 +33,9 @@ function determinePlayType(search) {
         return 'youtube-playlist';
     } else if(search.match(/\?v=.+/)) {
         return 'youtube-song';
-    } else if(search.match(/open\.spotify\.com\/track\/.+/)) {
+    } else if (search.match(/open\.spotify\.com\/playlist\/[a-zA-Z0-9]+/)) {
+        return 'spotify-playlist';
+    } else if(search.match(/open\.spotify\.com\/track\/[a-zA-Z0-9]+/)) {
         return 'spotify-song';
     }
     return 'youtube-search';
@@ -92,6 +97,29 @@ async function handleSpotifySong(msg, search) {
     }
 }
 
+// leaving spotify playlist handler function here
+// until there will be a way to handle spotify playlists
+// without making so much network usage
+async function handleSpotifyPlaylist(msg, search) {
+    const spotifyPlaylistId = await getSpotifyPlaylistIdFromUrl(search);
+
+    if(spotifyPlaylistId == null) {
+        msg.channel.send(`\`[❌] No playlist was found\``);
+        return;
+    }
+
+    const playlistName   = await getSpotifyPlaylistNameById(spotifyPlaylistId)
+    const playlistTracks = await getSpotifyPlaylistTracksById(spotifyPlaylistId);
+
+    for (let playlistTrack of playlistTracks) {
+        const youtubeVideoId = await getVideoByKeyWords(playlistTrack.name);
+        const youtubeVideoName = await getYoutubeVideoNameById(youtubeVideoId);
+        addSongToQueue(youtubeVideoId, youtubeVideoName);
+      }
+
+    msg.channel.send(`\`[✔️] Added ${playlistName}\``);
+}
+
 async function handleYoutubeSearch(msg, search) {
     const youtubeVideoId = await getVideoByKeyWords(search);
 
@@ -109,7 +137,7 @@ async function handleYoutubeSearch(msg, search) {
         msg.channel.send(`\`[🎶] Playing ${youtubeVideoName}\``);
     }
 
-    addSongToQueue(await getVideoByKeyWords(youtubeVideoId), youtubeVideoName);
+    addSongToQueue(youtubeVideoId, youtubeVideoName);
 }
 
 async function _play(msg) {
@@ -131,6 +159,11 @@ async function _play(msg) {
 
         case 'youtube-song':
             await handleYoutubeSong(msg, search);
+        break;
+
+        case 'spotify-playlist':
+            msg.channel.send(`\`[❗] Spotify playlist are not supported due to high network usage\``);
+            return;
         break;
 
         case 'spotify-song':
