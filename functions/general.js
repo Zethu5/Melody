@@ -54,15 +54,17 @@ function setHelperVar(variable, value) {
 }
 
 function initHelperVars() {
-    let helperVars                              = {};
-    helperVars['isBotPlayingSongs']             = false;
-    helperVars['queueDisplayPageIndex']         = 0;
-    helperVars['queueEmbedReactionUsersIds']    = [];
-    helperVars['positionInSong']                = 0;
-    helperVars['embedMsg']                      = {}
-    helperVars['isBotDisconnected']             = true;
-    helperVars['client']                        = {};
-    helperVars['isLoopingEnabled']              = false;
+    let helperVars                                  = {};
+    helperVars['isBotPlayingSongs']                 = false;
+    helperVars['queueDisplayPageIndex']             = 0;
+    helperVars['queueEmbedReactionUsersIds']        = [];
+    helperVars['positionInSong']                    = 0;
+    helperVars['embedMsg']                          = {}
+    helperVars['isBotDisconnected']                 = true;
+    helperVars['client']                            = {};
+    helperVars['isLoopingEnabled']                  = false;
+    helperVars['isInteractionCollectorInitiated']   = false;
+    helperVars['interactionCollector']              = null;
     setHelperVars(helperVars);
 }
 

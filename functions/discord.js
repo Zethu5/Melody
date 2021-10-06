@@ -1,4 +1,4 @@
-const { MessageEmbed }  = require('discord.js');
+const { MessageEmbed, MessageActionRow, MessageButton, ButtonInteraction }  = require('discord.js');
 const CONFIG_FILE       = '../config.json';
 
 const {
@@ -19,24 +19,12 @@ const {
     initHelperVars
 } = require('./general');
 
-
-async function clearQueueEmbedUsersReactions(embedMsg) {
-    const { queueEmbedReactionUsersIds } = getHelperVars();
-    queueEmbedReactionUsersIds.forEach(userId => {
-        if(embedMsg.reactions.resolve('⬅️') != null) {
-            embedMsg.reactions.resolve('⬅️').users.remove(userId);
-        }
-        if(embedMsg.reactions.resolve('➡️') != null) {
-            embedMsg.reactions.resolve('➡️').users.remove(userId);
-        }
-    });
-}
-
 async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
     let embed = new MessageEmbed();
     let songsQueue = getSongsQueue();
     let songsQueueLength = getSongsQueueLength();
-
+    let collector = undefined;
+    
     if(songsQueueLength > 0) {
         let queueString = '';
         counter = startIndex * 10 + 1;
@@ -97,22 +85,51 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
         .setTimestamp();
     }
 
+    const btnRow = new MessageActionRow()
+    .addComponents(
+        new MessageButton()
+            .setCustomId('previousQueuePageBtn')
+            .setLabel('Previous Page')
+            .setEmoji('⬅️')
+            .setStyle('PRIMARY'),
+        new MessageButton()
+            .setCustomId('nextQueuePageBtn')
+            .setLabel('Next Page')
+            .setEmoji('➡️')
+            .setStyle('PRIMARY')
+    );
+    
     if(editEmbed) {
         let { embedMsg } = getHelperVars();
-        await embedMsg.edit({ embeds: [embed] }).then(editedEmbedMsg => {
-            clearQueueEmbedUsersReactions(editedEmbedMsg);
+        await embedMsg.edit({ embeds: [embed]});
+
+        collector = await embedMsg.channel.createMessageComponentCollector({
+            max: 1,
+            time: 15000
         });
     } else {
-        const embedMsg = await originalMsg.channel.send({ embeds: [embed] }).then(embedMsg => {
-            if(getSongsQueueLength() > 10) {
-                embedMsg.react('⬅️');
-                embedMsg.react('➡️');
-            }
-            return embedMsg;
-        });
-
+        embedMsg = await originalMsg.channel.send({ embeds: [embed], components: [btnRow]})
         setHelperVar('embedMsg',embedMsg);
+
+        const { interactionCollector, isInteractionCollectorInitiated } = getHelperVars();
+        if(isInteractionCollectorInitiated) {
+            try {
+                interactionCollector.stop();
+            } catch(error) {}
+        }
     }
+
+    collector = await embedMsg.channel.createMessageComponentCollector({
+        max: 1,
+        time: 15000
+    });
+    
+    collector.on("collect", async (button) => {
+        await button.deferUpdate();
+    });
+
+    setHelperVar('isInteractionCollectorInitiated', true);
+    setHelperVar('interactionCollector', collector);
 }
 
 async function sendHelpEmbedMsg(originalMsg) {
@@ -170,7 +187,6 @@ async function isMsgFromDevServer(msg) {
 }
 
 async function isBotAloneInVC(guildId) {
-    // <VoiceChannel>.members.size
     const { client } = getHelperVars();
     const { DEV, MELODY_ID, MELODY_DEV_ID } = require(CONFIG_FILE);
 
@@ -198,29 +214,6 @@ async function swapMelodyStatus(client) {
     }, 5000);
 }
 
-async function queueSkimPages(reaction, user) {
-    if (user.id != MELODY_ID && user.id != MELODY_DEV_ID) {
-        let { queueDisplayPageIndex, queueEmbedReactionUsersIds } = getHelperVars();
-
-        if(reaction.emoji.name == '⬅️') {
-            if(queueDisplayPageIndex > 0) {
-                sendQueueEmbededMsg(--queueDisplayPageIndex, null, true);
-                setHelperVar('queueDisplayPageIndex',queueDisplayPageIndex);
-            }
-        } else if(reaction.emoji.name == '➡️') {
-            if(queueDisplayPageIndex < Number(getSongsQueueLength()/10-1)) {
-                sendQueueEmbededMsg(++queueDisplayPageIndex, null, true);
-                setHelperVar('queueDisplayPageIndex',queueDisplayPageIndex);
-            }
-        }
-
-        if(!queueEmbedReactionUsersIds.includes(user.id)) {
-            queueEmbedReactionUsersIds.push(user.id);
-            setHelperVar('queueEmbedReactionUsersIds',queueEmbedReactionUsersIds);
-        }
-    }
-}
-
 async function setMelodyStatus(oldVoiceState, newVoiceState) {
     if(oldVoiceState.member.id == MELODY_ID && newVoiceState.member.id == MELODY_ID ||
         oldVoiceState.member.id == MELODY_DEV_ID && newVoiceState.member.id == MELODY_DEV_ID) {
@@ -244,25 +237,20 @@ function clientLogin(client) {
     }
 }
 
-async function queueReactionHandler(reaction, user) {
-    if (user.id != MELODY_ID && user.id != MELODY_DEV_ID) {
-        let { queueDisplayPageIndex, queueEmbedReactionUsersIds } = getHelperVars();
+async function queueButtonHandler(interaction) {
+    if (!interaction.isButton()) return;
 
-        if(reaction.emoji.name == '⬅️') {
-            if(queueDisplayPageIndex > 0) {
-                sendQueueEmbededMsg(--queueDisplayPageIndex, null, true);
-                setHelperVar('queueDisplayPageIndex',queueDisplayPageIndex);
-            }
-        } else if(reaction.emoji.name == '➡️') {
-            if(queueDisplayPageIndex < Number(getSongsQueueLength()/10-1)) {
-                sendQueueEmbededMsg(++queueDisplayPageIndex, null, true);
-                setHelperVar('queueDisplayPageIndex',queueDisplayPageIndex);
-            }
+    let  { queueDisplayPageIndex } = getHelperVars();
+
+    if(interaction.customId === 'previousQueuePageBtn') {
+        if(queueDisplayPageIndex > 0) {
+            await sendQueueEmbededMsg(--queueDisplayPageIndex, null, true);
+            setHelperVar('queueDisplayPageIndex',queueDisplayPageIndex);
         }
-
-        if(!queueEmbedReactionUsersIds.includes(user.id)) {
-            queueEmbedReactionUsersIds.push(user.id);
-            setHelperVar('queueEmbedReactionUsersIds',queueEmbedReactionUsersIds);
+    } else if(interaction.customId === 'nextQueuePageBtn') {
+        if(queueDisplayPageIndex < Number(getSongsQueueLength()/10-1)) {
+            await sendQueueEmbededMsg(++queueDisplayPageIndex, null, true);
+            setHelperVar('queueDisplayPageIndex',queueDisplayPageIndex);
         }
     }
 }
@@ -308,9 +296,8 @@ exports.getNowPlaying           = getNowPlaying;
 exports.isMsgFromDevServer      = isMsgFromDevServer;
 exports.isBotAloneInVC          = isBotAloneInVC;
 exports.swapMelodyStatus        = swapMelodyStatus;
-exports.queueSkimPages          = queueSkimPages;
 exports.setMelodyStatus         = setMelodyStatus;
 exports.clientLogin             = clientLogin;
-exports.queueReactionHandler    = queueReactionHandler;
+exports.queueButtonHandler      = queueButtonHandler;
 exports.voiceStateUpdateHandler = voiceStateUpdateHandler;
 exports.swapMelodyActivity      = swapMelodyActivity;

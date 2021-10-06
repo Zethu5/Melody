@@ -1,14 +1,6 @@
-const {
-    initSongsQueue,
-    initHelperVars,
-} = require('./functions/general')
 
-const {
-    isMsgFromDevServer
-} = require('./functions/discord')
 
 const { Client, Intents } = require('discord.js');
-const { DEV } = require('./config.json');
 
 const client = new Client({ intents: [
         Intents.FLAGS.GUILDS, 
@@ -19,13 +11,29 @@ const client = new Client({ intents: [
         Intents.FLAGS.GUILD_VOICE_STATES
 ]});
 
-const { commandsHandler } = require('./commands/commandsHandler');
 const {
-    queueReactionHandler,
+    commandsHandler
+} = require('./commands/commandsHandler');
+
+const {
+    DEV
+} = require('./config.json');
+
+const {
     voiceStateUpdateHandler,
     swapMelodyActivity,
     clientLogin
 } = require('./functions/discord');
+
+const {
+    initSongsQueue,
+    initHelperVars,
+} = require('./functions/general')
+
+const {
+    queueButtonHandler,
+    isMsgFromDevServer
+} = require('./functions/discord')
 
 client.once('ready', async () => {
     initSongsQueue();
@@ -46,13 +54,12 @@ client.on('messageCreate', async msg => {
     await(commandsHandler(msg));
 });
 
-client.on('messageReactionAdd', async (reaction, user) => {
-    await queueReactionHandler(reaction, user);
-});
-
 client.on('voiceStateUpdate', async (oldVoiceState, newVoiceState) => {
     await voiceStateUpdateHandler(oldVoiceState, newVoiceState);
 });
 
+client.on('interactionCreate', async (interaction) => {
+    await queueButtonHandler(interaction);
+});
 
 clientLogin(client);

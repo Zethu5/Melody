@@ -3,7 +3,8 @@ const {
     isSongsQueueEmpty,
     getHelperVars,
     setHelperVar,
-    addSongToQueue
+    addSongToQueue,
+    getSongsQueueLength
 } = require("../functions/general");
 
 const { 
@@ -82,6 +83,15 @@ async function handleSpotifySong(msg, search) {
 
     if(track != null) {
         const youtubeVideoId = await getVideoByKeyWords(track.name);
+
+        if(youtubeVideoId == null) {
+            msg.channel.send(`\`[❌] No song was found\``);
+            return;
+        } else if (youtubeVideoId === 403) {
+            msg.channel.send(`\`[❌] Youtube API reached it's quota for today, try again later\``);
+            return;
+        }
+
         const youtubeVideoName = await getYoutubeVideoNameById(youtubeVideoId);
         
         // play song or add it to queue
@@ -125,6 +135,9 @@ async function handleYoutubeSearch(msg, search) {
 
     if(youtubeVideoId == null) {
         msg.channel.send(`\`[❌] No video was found\``);
+        return;
+    } else if (youtubeVideoId === 403) {
+        msg.channel.send(`\`[❌] Youtube API reached it's quota for today, try again later\``);
         return;
     }
 
@@ -178,7 +191,7 @@ async function _play(msg) {
     // start playing queue in nothing is playing now
     const { isBotPlayingSongs } = getHelperVars();
 
-    if(!isBotPlayingSongs) {
+    if(!isBotPlayingSongs && getSongsQueueLength() > 0) {
         console.log('[INFO] Started playing queue');
         setHelperVar('isBotPlayingSongs', true);
         await playQueue(msg);
