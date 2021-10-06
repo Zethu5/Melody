@@ -119,18 +119,23 @@ async function getVideoLengthInSeconds(youtubeVideoId) {
 }
 
 async function getVideoByKeyWords(keyWords) {
-    const searchResults = await google.youtube('v3').search.list({
-        key: YOUTUBE_TOKEN,
-        maxResults: 1,
-        order: 'relevance',
-        part: 'snippet',
-        q: keyWords
-    });
+    try {
+        const searchResults = await google.youtube('v3').search.list({
+            key: YOUTUBE_TOKEN,
+            maxResults: 1,
+            order: 'relevance',
+            part: 'snippet',
+            q: keyWords
+        });
 
-    if(searchResults.data.items.length > 0) {
-        return searchResults.data.items[0].id.videoId
+        if(searchResults.data.items.length > 0) {
+            return searchResults.data.items[0].id.videoId
+        }
+
+        return null
+    } catch (error) {
+        return error.code;
     }
-    return null
 }
 
 exports.getYoutubeVideoId       = getYoutubeVideoId;
