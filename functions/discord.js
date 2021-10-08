@@ -131,7 +131,7 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
         setHelperVar('embedMsg',embedMsg);
 
         const { interactionCollector } = getHelperVars();
-        if(interactionCollector.constructor.name === 'InteractionCollector') {
+        if(interactionCollector != null && interactionCollector.constructor.name === 'InteractionCollector') {
             try {
                 interactionCollector.stop();
             } catch(error) { console.log(error) };
