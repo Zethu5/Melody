@@ -21,9 +21,13 @@ const {
 
 async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
     let embed = new MessageEmbed();
+    let embedMsg = undefined;
     let songsQueue = getSongsQueue();
     let songsQueueLength = getSongsQueueLength();
     let collector = undefined;
+    let pageHasOver10Songs = false;
+
+    if(songsQueueLength - startIndex * 10 >= 10) pageHasOver10Songs = true;
     
     if(songsQueueLength > 0) {
         let queueString = '';
@@ -31,7 +35,7 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
 
         if(startIndex == 0) {
             counter++;
-            if(songsQueueLength - startIndex * 10 >= 10) {
+            if(pageHasOver10Songs) {
                 songsQueue
                 .slice(startIndex * 10 + 1, startIndex * 10 + 10)
                 .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
@@ -41,7 +45,7 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
                 .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
             }
         } else {
-            if(songsQueueLength - startIndex * 10 >= 10) {
+            if(pageHasOver10Songs) {
                 songsQueue
                 .slice(startIndex * 10, startIndex * 10 + 10)
                 .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
@@ -62,7 +66,6 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
             .addFields(
                 { name: 'Now Playing', value: `**1.** \`${songsQueue[0].name}\``}
             )
-            .setTimestamp();
         }
 
         // check if queue string is empty
@@ -82,53 +85,70 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
         .addFields(
             { name: 'Songs', value: '\`No songs in queue\`' }
         )
-        .setTimestamp();
     }
 
-    const btnRow = new MessageActionRow()
-    .addComponents(
-        new MessageButton()
-            .setCustomId('previousQueuePageBtn')
-            .setLabel('Previous Page')
-            .setEmoji('⬅️')
-            .setStyle('PRIMARY'),
-        new MessageButton()
-            .setCustomId('nextQueuePageBtn')
-            .setLabel('Next Page')
-            .setEmoji('➡️')
-            .setStyle('PRIMARY')
-    );
-    
-    if(editEmbed) {
-        let { embedMsg } = getHelperVars();
-        await embedMsg.edit({ embeds: [embed]});
+    let btnRow = new MessageActionRow();
+    if(getSongsQueueLength() > 10) {
+        if(startIndex != 0) {
+            btnRow.addComponents(
+                new MessageButton()
+                .setCustomId('previousQueuePageBtn')
+                .setLabel('Previous Page')
+                .setEmoji('⬅️')
+                .setStyle('PRIMARY'),
+            )
+        }
 
-        collector = await embedMsg.channel.createMessageComponentCollector({
-            max: 1,
-            time: 15000
-        });
-    } else {
-        embedMsg = await originalMsg.channel.send({ embeds: [embed], components: [btnRow]})
-        setHelperVar('embedMsg',embedMsg);
-
-        const { interactionCollector, isInteractionCollectorInitiated } = getHelperVars();
-        if(isInteractionCollectorInitiated) {
-            try {
-                interactionCollector.stop();
-            } catch(error) {}
+        if(pageHasOver10Songs) {
+            btnRow.addComponents(
+                new MessageButton()
+                .setCustomId('nextQueuePageBtn')
+                .setLabel('Next Page')
+                .setEmoji('➡️')
+                .setStyle('PRIMARY')
+            );
         }
     }
 
-    collector = await embedMsg.channel.createMessageComponentCollector({
-        max: 1,
-        time: 15000
-    });
+    if(editEmbed) {
+        let { embedMsg } = getHelperVars();
+
+        try {
+            await embedMsg.edit({ embeds: [embed], components: [btnRow] });
+        } catch(error) { console.log(error) };
+
+        collector = await embedMsg.channel.createMessageComponentCollector({
+            max: 1,
+            time: 5000
+        });
+    } else {
+        if(pageHasOver10Songs) {
+            embedMsg = await originalMsg.channel.send({ embeds: [embed], components: [btnRow]})
+        } else {
+            embedMsg = await originalMsg.channel.send({ embeds: [embed] });
+        }
+        
+        setHelperVar('embedMsg',embedMsg);
+
+        const { interactionCollector } = getHelperVars();
+        if(interactionCollector.constructor.name === 'InteractionCollector') {
+            try {
+                interactionCollector.stop();
+            } catch(error) { console.log(error) };
+        }
+
+        collector = await embedMsg.channel.createMessageComponentCollector({
+            max: 1,
+            time: 5000
+        });
+    }
     
     collector.on("collect", async (button) => {
-        await button.deferUpdate();
+        try {
+            await button.deferUpdate();
+        } catch(error) { console.log(error) };
     });
 
-    setHelperVar('isInteractionCollectorInitiated', true);
     setHelperVar('interactionCollector', collector);
 }
 

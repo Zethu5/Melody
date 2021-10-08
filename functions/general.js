@@ -63,7 +63,6 @@ function initHelperVars() {
     helperVars['isBotDisconnected']                 = true;
     helperVars['client']                            = {};
     helperVars['isLoopingEnabled']                  = false;
-    helperVars['isInteractionCollectorInitiated']   = false;
     helperVars['interactionCollector']              = null;
     setHelperVars(helperVars);
 }
