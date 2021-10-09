@@ -21,7 +21,7 @@ const {
 } = require('./general');
 
 const {
-    getYoutubeVideoDataByUrl
+    getYoutubeVideoDataByUrl, youtubeVideoDurationFormatToSeconds
 } = require('./youtube');
 
 async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
@@ -315,22 +315,25 @@ async function clientLogin(client) {
     }
 }
 
+function convertSecondsToDurationString(seconds) {
+    return `    ▬▬▬▬▬▬▬▬  ${new Date(seconds * 1000).toISOString().substr(11, 8)}`
+}
+
 async function sendSongAddedEmbedMsg(msg, youtubeVideoUrl) {
     const youtubeVideoData = await getYoutubeVideoDataByUrl(youtubeVideoUrl)
 
-    if(youtubeVideoData == null) {
-        return;
-    }
+    if(youtubeVideoData == null) return;
 
-    const youtubeVideoTitle         = youtubeVideoData.snippet.title;
-    const youtubeVideoChannelName   = youtubeVideoData.snippet.channelTitle;
-    const youtubeVideoThumbnail     = youtubeVideoData.snippet.thumbnails.maxres.url;
+    const youtubeVideoTitle          = youtubeVideoData.snippet.title;
+    const youtubeVideoChannelName    = youtubeVideoData.snippet.channelTitle;
+    const youtubeVideoThumbnail      = youtubeVideoData.snippet.thumbnails.maxres.url;
+    const youtubeVideoDurationString = convertSecondsToDurationString(youtubeVideoDurationFormatToSeconds(youtubeVideoData.contentDetails.duration));
 
     const status = getSongsQueueLength() == 0 ? 'Playing' : 'Added to queue';
 
     const embed = new MessageEmbed()
     .setColor(EMBED_MSG_COLOR_SCHEME)
-    .setTitle(status)
+    .setTitle(status + ' ' + youtubeVideoDurationString)
     .setThumbnail(youtubeVideoThumbnail)
     .addFields(
         { name: 'Title', value: youtubeVideoTitle }
