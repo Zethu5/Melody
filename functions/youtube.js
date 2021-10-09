@@ -109,7 +109,7 @@ async function getYoutubePlaylistSongs(youtubePlaylistId) {
             key: YOUTUBE_TOKEN,
             maxResults: 50,
             pageToken: nextPageToken,
-            part: ['snippet', 'status'],
+            part: ['snippet', 'status', 'contentDetails'],
             playlistId: youtubePlaylistId
         });
         
