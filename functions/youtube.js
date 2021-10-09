@@ -28,22 +28,18 @@ async function getYoutubePlaylistId(youtubePlaylistUrl) {
     if(youtubePlaylistName != null) {
         return youtubePlaylistId;
     }
+    
     return null;
 }
 
 async function getYoutubeVideoDataByUrl(youtubeVideoUrl) {
     const youtubeVideoId = getYoutubeVideoId(youtubeVideoUrl);
 
-    const youtubeResponse = await google.youtube('v3').videos.list({
-        key: YOUTUBE_TOKEN,
-        part: ['snippet', 'contentDetails'],
-        id: youtubeVideoId
-    });
-
-    if(youtubeResponse.data.items.length > 0) {
-        return youtubeResponse.data.items[0];
+    if(youtubeVideoId == null) {
+        return null;
     }
-    return null;
+
+    return await getYoutubeVideoDataById(youtubeVideoId);
 }
 
 async function getYoutubeVideoDataById(youtubeVideoId) {
@@ -56,11 +52,33 @@ async function getYoutubeVideoDataById(youtubeVideoId) {
     if(youtubeResponse.data.items.length > 0) {
         return youtubeResponse.data.items[0];
     }
+
     return null;
+}
+
+async function getYoutubePlayistDataByUrl(youtubePlaylistUrl) {
+    const youtubePlaylistId = await getYoutubePlaylistId(youtubePlaylistUrl);
+
+    try {
+        const youtubeResponse = await google.youtube('v3').playlists.list({
+            key: YOUTUBE_TOKEN,
+            part: ['snippet', 'contentDetails'],
+            id: youtubePlaylistId
+        });
+
+        return youtubeResponse.data.items[0];
+    } catch (error) {
+        console.log(error);
+        return error.code;
+    }
 }
 
 async function getYoutubeVideoNameByUrl(youtubeVideoUrl) {
     const youtubeVideoId = getYoutubeVideoId(youtubeVideoUrl);
+
+    if(youtubeVideoId == null) {
+        return null;
+    }
 
     const youtubeResponse = await google.youtube('v3').videos.list({
         key: YOUTUBE_TOKEN,
@@ -100,7 +118,7 @@ async function getYoutubePlaylistName(youtubePlaylistId) {
     return null;
 }
 
-async function getYoutubePlaylistSongs(youtubePlaylistId) {
+async function getYoutubePlaylistSongsById(youtubePlaylistId) {
     let nextPageToken = null;
     let youtubePlaylistSongs = [];
 
@@ -109,7 +127,7 @@ async function getYoutubePlaylistSongs(youtubePlaylistId) {
             key: YOUTUBE_TOKEN,
             maxResults: 50,
             pageToken: nextPageToken,
-            part: ['snippet', 'status', 'contentDetails'],
+            part: ['snippet', 'contentDetails', 'status'],
             playlistId: youtubePlaylistId
         });
         
@@ -144,7 +162,7 @@ async function getYoutubeVideoLengthInSecondsById(youtubeVideoId) {
     return youtubeVideoDurationFormatToSeconds()
 }
 
-async function getVideoByKeyWords(keyWords) {
+async function getVideoIdByKeyWords(keyWords) {
     try {
         const searchResults = await google.youtube('v3').search.list({
             key: YOUTUBE_TOKEN,
@@ -169,8 +187,10 @@ exports.getYoutubePlaylistId                    = getYoutubePlaylistId;
 exports.getYoutubeVideoNameByUrl                = getYoutubeVideoNameByUrl;
 exports.getYoutubeVideoNameById                 = getYoutubeVideoNameById;
 exports.getYoutubePlaylistName                  = getYoutubePlaylistName;
-exports.getYoutubePlaylistSongs                 = getYoutubePlaylistSongs;
+exports.getYoutubePlaylistSongsById             = getYoutubePlaylistSongsById;
 exports.getYoutubeVideoLengthInSecondsById      = getYoutubeVideoLengthInSecondsById;
-exports.getVideoByKeyWords                      = getVideoByKeyWords;
+exports.getVideoIdByKeyWords                    = getVideoIdByKeyWords;
+exports.getYoutubeVideoDataById                 = getYoutubeVideoDataById;
 exports.getYoutubeVideoDataByUrl                = getYoutubeVideoDataByUrl;
 exports.youtubeVideoDurationFormatToSeconds     = youtubeVideoDurationFormatToSeconds;
+exports.getYoutubePlayistDataByUrl              = getYoutubePlayistDataByUrl;
