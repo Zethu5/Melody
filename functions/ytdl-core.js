@@ -21,7 +21,7 @@ const {
 
 const {
     getYoutubePlaylistSongs,
-    getVideoLengthInSeconds
+    getYoutubeVideoLengthInSecondsById
 } = require('./youtube');
 
 const { 
@@ -170,7 +170,7 @@ async function getPlayingSongCurrentPosition() {
 }
 
 async function forwardPlayingSong(secondsToAdd) {
-    const playingSongLengthInSeconds = await getVideoLengthInSeconds(getSongsQueue()[0].id);
+    const playingSongLengthInSeconds = await getYoutubeVideoLengthInSecondsById(getSongsQueue()[0].id);
     const playingSongCurrentPosition = await getPlayingSongCurrentPosition();
     const { positionInSong }         = await getHelperVars()
 
@@ -200,9 +200,10 @@ async function rewindPlayingSong(secondsToRewind) {
 
 async function goToTimeInPlayingSong(secondsToGoTo) {
     if(getSongsQueueLength() == 0) return false;
-    const playingSongLengthInSeconds = await getVideoLengthInSeconds(getSongsQueue()[0].id);
+    const playingSongLengthInSeconds = await getYoutubeVideoLengthInSecondsById(getSongsQueue()[0].id);
 
-    if(secondsToGoTo > playingSongLengthInSeconds) {
+    if(playingSongLengthInSeconds == null ||
+        secondsToGoTo > playingSongLengthInSeconds) {
         return false;
     }
 
