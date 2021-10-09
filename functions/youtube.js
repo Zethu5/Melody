@@ -46,6 +46,19 @@ async function getYoutubeVideoDataByUrl(youtubeVideoUrl) {
     return null;
 }
 
+async function getYoutubeVideoDataById(youtubeVideoId) {
+    const youtubeResponse = await google.youtube('v3').videos.list({
+        key: YOUTUBE_TOKEN,
+        part: 'snippet',
+        id: youtubeVideoId
+    });
+
+    if(youtubeResponse.data.items.length > 0) {
+        return youtubeResponse.data.items[0];
+    }
+    return null;
+}
+
 async function getYoutubeVideoNameByUrl(youtubeVideoUrl) {
     const youtubeVideoId = getYoutubeVideoId(youtubeVideoUrl);
 
@@ -108,19 +121,14 @@ async function getYoutubePlaylistSongs(youtubePlaylistId) {
     return youtubePlaylistSongs.filter(x => x.status.privacyStatus === 'public');
 }
 
-async function getVideoMetadata(youtubeVideoId) {
-    const videoMetadata = await google.youtube('v3').videos.list({
-        key: YOUTUBE_TOKEN,
-        part: ['contentDetails'],
-        id: youtubeVideoId
-    });
-
-    return videoMetadata;
-}
-
 async function getVideoLengthInSeconds(youtubeVideoId) {
-    const youtubeVideoMetadata = await getVideoMetadata(youtubeVideoId);
-    const videoDuration = youtubeVideoMetadata.data.items[0].contentDetails.duration;
+    const youtubeVideoData = await getYoutubeVideoDataById(youtubeVideoId);
+
+    if(youtubeVideoData == null) {
+        return;
+    }
+
+    const videoDuration = youtubeVideoData.contentDetails.duration;
     const durationArray = videoDuration.replace(/^PT/,'').replace(/S$/,'').split(/[HM]/).map(x => Number(x));
 
     switch(durationArray.length) {
