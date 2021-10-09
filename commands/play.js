@@ -3,7 +3,7 @@ const {
     isSongsQueueEmpty,
     getHelperVars,
     setHelperVar,
-    addSongToQueue,
+    addVideoToQueue,
     getSongsQueueLength
 } = require("../functions/general");
 
@@ -73,7 +73,7 @@ async function handleYoutubeSong(msg, search) {
 
     // play song or add it to queue
     await sendSongAddedEmbedMsg(msg, search);
-    addSongToQueue(getYoutubeVideoId(search), youtubeVideoName);
+    addVideoToQueue(getYoutubeVideoId(search), youtubeVideoName);
 }
 
 async function handleSpotifySong(msg, search) {
@@ -100,7 +100,7 @@ async function handleSpotifySong(msg, search) {
             msg.channel.send(`\`[🎶] Playing ${youtubeVideoName}\``);
         }
 
-        addSongToQueue(youtubeVideoId, youtubeVideoName);
+        addVideoToQueue(youtubeVideoId, youtubeVideoName);
     } else {
         msg.channel.send(`\`[❌] No song was found\``);
     }
@@ -123,7 +123,7 @@ async function handleSpotifyPlaylist(msg, search) {
     for (let playlistTrack of playlistTracks) {
         const youtubeVideoId = await getVideoByKeyWords(playlistTrack.name);
         const youtubeVideoName = await getYoutubeVideoNameById(youtubeVideoId);
-        addSongToQueue(youtubeVideoId, youtubeVideoName);
+        addVideoToQueue(youtubeVideoId, youtubeVideoName);
       }
 
     msg.channel.send(`\`[✔️] Added ${playlistName}\``);
@@ -149,7 +149,7 @@ async function handleYoutubeSearch(msg, search) {
         msg.channel.send(`\`[🎶] Playing ${youtubeVideoName}\``);
     }
 
-    addSongToQueue(youtubeVideoId, youtubeVideoName);
+    addVideoToQueue(youtubeVideoId, youtubeVideoName);
 }
 
 async function _play(msg) {
