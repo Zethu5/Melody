@@ -167,7 +167,6 @@ exports.getYoutubeVideoNameByUrl     = getYoutubeVideoNameByUrl;
 exports.getYoutubeVideoNameById      = getYoutubeVideoNameById;
 exports.getYoutubePlaylistName       = getYoutubePlaylistName;
 exports.getYoutubePlaylistSongs      = getYoutubePlaylistSongs;
-exports.getVideoMetadata             = getVideoMetadata;
 exports.getVideoLengthInSeconds      = getVideoLengthInSeconds;
 exports.getVideoByKeyWords           = getVideoByKeyWords;
 exports.getYoutubeVideoDataByUrl     = getYoutubeVideoDataByUrl;
