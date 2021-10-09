@@ -121,15 +121,8 @@ async function getYoutubePlaylistSongs(youtubePlaylistId) {
     return youtubePlaylistSongs.filter(x => x.status.privacyStatus === 'public');
 }
 
-async function getVideoLengthInSeconds(youtubeVideoId) {
-    const youtubeVideoData = await getYoutubeVideoDataById(youtubeVideoId);
-
-    if(youtubeVideoData == null) {
-        return;
-    }
-
-    const videoDuration = youtubeVideoData.contentDetails.duration;
-    const durationArray = videoDuration.replace(/^PT/,'').replace(/S$/,'').split(/[HM]/).map(x => Number(x));
+function youtubeVideoDurationFormatToSeconds(youtubeVideoDurationFormat) {
+    const durationArray = youtubeVideoDurationFormat.replace(/^PT/,'').replace(/S$/,'').split(/[HM]/).map(x => Number(x));
 
     switch(durationArray.length) {
         case 3:
@@ -139,6 +132,16 @@ async function getVideoLengthInSeconds(youtubeVideoId) {
         case 1:
             return durationArray[0];
     }
+}
+
+async function getYoutubeVideoLengthInSecondsById(youtubeVideoId) {
+    const youtubeVideoData = await getYoutubeVideoDataById(youtubeVideoId);
+
+    if(youtubeVideoData == null) {
+        return null;
+    }
+    
+    return youtubeVideoDurationFormatToSeconds()
 }
 
 async function getVideoByKeyWords(keyWords) {
@@ -161,12 +164,13 @@ async function getVideoByKeyWords(keyWords) {
     }
 }
 
-exports.getYoutubeVideoId            = getYoutubeVideoId;
-exports.getYoutubePlaylistId         = getYoutubePlaylistId;
-exports.getYoutubeVideoNameByUrl     = getYoutubeVideoNameByUrl;
-exports.getYoutubeVideoNameById      = getYoutubeVideoNameById;
-exports.getYoutubePlaylistName       = getYoutubePlaylistName;
-exports.getYoutubePlaylistSongs      = getYoutubePlaylistSongs;
-exports.getVideoLengthInSeconds      = getVideoLengthInSeconds;
-exports.getVideoByKeyWords           = getVideoByKeyWords;
-exports.getYoutubeVideoDataByUrl     = getYoutubeVideoDataByUrl;
+exports.getYoutubeVideoId                       = getYoutubeVideoId;
+exports.getYoutubePlaylistId                    = getYoutubePlaylistId;
+exports.getYoutubeVideoNameByUrl                = getYoutubeVideoNameByUrl;
+exports.getYoutubeVideoNameById                 = getYoutubeVideoNameById;
+exports.getYoutubePlaylistName                  = getYoutubePlaylistName;
+exports.getYoutubePlaylistSongs                 = getYoutubePlaylistSongs;
+exports.getYoutubeVideoLengthInSecondsById      = getYoutubeVideoLengthInSecondsById;
+exports.getVideoByKeyWords                      = getVideoByKeyWords;
+exports.getYoutubeVideoDataByUrl                = getYoutubeVideoDataByUrl;
+exports.youtubeVideoDurationFormatToSeconds     = youtubeVideoDurationFormatToSeconds;
