@@ -73,25 +73,21 @@ function removePlayedSongFromQueue() {
     setSongsQueue(songsQueue);
 }
 
-function addVideoToQueue(youtubeVideo) {
+function addYoutubeVideoToQueue(youtubeVideo) {
     let songsQueue = getSongsQueue();
     songsQueue.push({
         'id': youtubeVideo.id,
         'name': youtubeVideo.snippet.title,
-        'ytDuration': youtubeVideo.contentDetails.duration,
-        'thumbnail': youtubeVideo.snippet.thumbnails.maxres.url
     });
     setSongsQueue(songsQueue);
 }
 
-function addPlaylistToQueue(youtubePlaylist) {
+function addYoutubePlaylistToQueue(youtubePlaylist) {
     let songsQueue = getSongsQueue();
     youtubePlaylist.forEach((youtubeVideo) => {
         songsQueue.push({
-            'id': youtubeVideo.id,
+            'id': youtubeVideo.contentDetails.videoId,
             'name': youtubeVideo.snippet.title,
-            'ytDuration': youtubeVideo.contentDetails.duration,
-            'thumbnail': youtubeVideo.snippet.thumbnails.maxres.url
         });
     });
     setSongsQueue(songsQueue);
@@ -127,8 +123,8 @@ exports.setHelperVars                   = setHelperVars;
 exports.setHelperVar                    = setHelperVar;
 exports.initHelperVars                  = initHelperVars;
 exports.removePlayedSongFromQueue       = removePlayedSongFromQueue;
-exports.addVideoToQueue                 = addVideoToQueue;
-exports.addPlaylistToQueue              = addPlaylistToQueue;
+exports.addYoutubeVideoToQueue          = addYoutubeVideoToQueue;
+exports.addYoutubePlaylistToQueue       = addYoutubePlaylistToQueue;
 exports.clearQueue                      = clearQueue;
 exports.isSongExistsInQueue             = isSongExistsInQueue;
 exports.base64Encode                    = base64Encode;
