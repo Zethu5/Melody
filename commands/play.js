@@ -10,7 +10,7 @@ const {
 const { 
     getYoutubePlaylistId,
     getYoutubePlaylistName,
-    getYoutubeVideoName,
+    getYoutubeVideoNameByUrl,
     getYoutubeVideoNameById,
     getYoutubeVideoId,
     getVideoByKeyWords
@@ -28,6 +28,10 @@ const {
     getSpotifyPlaylistIdFromUrl,
     getSpotifyPlaylistNameById
 } = require("../functions/spotify");
+
+const {
+    sendSongAddedEmbedMsg
+} = require("../functions/discord");
 
 function determinePlayType(search) {
     if(search.match(/[&?]list=([^&]+)/)) {
@@ -56,7 +60,7 @@ async function handleYoutubePlaylist(msg, search) {
 }
 
 async function handleYoutubeSong(msg, search) {
-    const youtubeVideoName = await getYoutubeVideoName(search);
+    const youtubeVideoName = await getYoutubeVideoNameByUrl(search);
 
     // video couldn't be reached or already exists in queue
     if(!youtubeVideoName) {
@@ -68,12 +72,7 @@ async function handleYoutubeSong(msg, search) {
     }
 
     // play song or add it to queue
-    if(!isSongsQueueEmpty()) {
-        msg.channel.send(`\`[✔️] Added ${youtubeVideoName}\``);
-    } else {
-        msg.channel.send(`\`[🎶] Playing ${youtubeVideoName}\``);
-    }
-
+    await sendSongAddedEmbedMsg(msg, search);
     addSongToQueue(getYoutubeVideoId(search), youtubeVideoName);
 }
 

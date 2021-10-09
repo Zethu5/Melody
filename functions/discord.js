@@ -7,7 +7,8 @@ const {
     MELODY_ID,
     MELODY_DEV_ID,
     MELODY_TOKEN,
-    MELODY_DEV_TOKEN
+    MELODY_DEV_TOKEN,
+    EMBED_MSG_COLOR_SCHEME
 } = require(CONFIG_FILE);
 
 const { 
@@ -18,6 +19,10 @@ const {
     initSongsQueue,
     initHelperVars
 } = require('./general');
+
+const {
+    getYoutubeVideoDataByUrl
+} = require('./youtube');
 
 async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
     let embed = new MessageEmbed();
@@ -60,7 +65,7 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
 
         if(startIndex == 0) {
             embed
-            .setColor('#0099ff')
+            .setColor(EMBED_MSG_COLOR_SCHEME)
             .setTitle('Queue')
             .setThumbnail(MELODY_ICON)
             .addFields(
@@ -79,7 +84,7 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
 
     } else {
         embed = new MessageEmbed()
-        .setColor('#0099ff')
+        .setColor(EMBED_MSG_COLOR_SCHEME)
         .setTitle('Queue')
         .setThumbnail(MELODY_ICON)
         .addFields(
@@ -170,7 +175,7 @@ async function sendHelpEmbedMsg(originalMsg) {
     `
     
     const embed = new MessageEmbed()
-    .setColor('#0099ff')
+    .setColor(EMBED_MSG_COLOR_SCHEME)
     .setTitle('Help')
     .setThumbnail(MELODY_ICON)
     .addFields(
@@ -184,7 +189,7 @@ async function getNowPlaying(originalMsg) {
     const song = (await getSongsQueue())[0];
 
     const embed = new MessageEmbed()
-    .setColor('#0099ff')
+    .setColor(EMBED_MSG_COLOR_SCHEME)
     .setTitle('Now Playing')
     .setThumbnail(MELODY_ICON)
     .addFields(
@@ -310,6 +315,36 @@ async function clientLogin(client) {
     }
 }
 
+async function sendSongAddedEmbedMsg(msg, youtubeVideoUrl) {
+    const youtubeVideoData = await getYoutubeVideoDataByUrl(youtubeVideoUrl)
+
+    if(youtubeVideoData == null) {
+        return;
+    }
+
+    const youtubeVideoTitle         = youtubeVideoData.snippet.title;
+    const youtubeVideoChannelName   = youtubeVideoData.snippet.channelTitle;
+    const youtubeVideoThumbnail     = youtubeVideoData.snippet.thumbnails.maxres.url;
+
+    const status = getSongsQueueLength() == 0 ? 'Playing' : 'Added to queue';
+
+    const embed = new MessageEmbed()
+    .setColor(EMBED_MSG_COLOR_SCHEME)
+    .setTitle(status)
+    .setThumbnail(youtubeVideoThumbnail)
+    .addFields(
+        { name: 'Title', value: youtubeVideoTitle }
+    )
+    .addFields(
+        { name: 'Video', value: `[${youtubeVideoUrl}](${youtubeVideoUrl})`, inline: true }
+    )
+    .addFields(
+        { name: 'Channel', value: youtubeVideoChannelName, inline: true }
+    );
+
+    msg.channel.send({ embeds: [embed] });
+}
+
 exports.sendQueueEmbededMsg     = sendQueueEmbededMsg;
 exports.sendHelpEmbedMsg        = sendHelpEmbedMsg;
 exports.getNowPlaying           = getNowPlaying;
@@ -321,3 +356,4 @@ exports.clientLogin             = clientLogin;
 exports.queueButtonHandler      = queueButtonHandler;
 exports.voiceStateUpdateHandler = voiceStateUpdateHandler;
 exports.swapMelodyActivity      = swapMelodyActivity;
+exports.sendSongAddedEmbedMsg   = sendSongAddedEmbedMsg;
