@@ -297,7 +297,7 @@ async function swapMelodyActivity(client) {
         const status = melodyStatuses[index];
         client.user.setActivity(status);
         index++;
-    }, 5000);
+    }, 30000);
 }
 
 async function clientLogin(client) {
