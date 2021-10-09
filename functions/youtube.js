@@ -36,7 +36,7 @@ async function getYoutubeVideoDataByUrl(youtubeVideoUrl) {
 
     const youtubeResponse = await google.youtube('v3').videos.list({
         key: YOUTUBE_TOKEN,
-        part: 'snippet,contentDetails',
+        part: ['snippet', 'contentDetails'],
         id: youtubeVideoId
     });
 
@@ -49,7 +49,7 @@ async function getYoutubeVideoDataByUrl(youtubeVideoUrl) {
 async function getYoutubeVideoDataById(youtubeVideoId) {
     const youtubeResponse = await google.youtube('v3').videos.list({
         key: YOUTUBE_TOKEN,
-        part: 'snippet,contentDetails',
+        part: ['snippet', 'contentDetails'],
         id: youtubeVideoId
     });
 
