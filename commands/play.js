@@ -1,36 +1,30 @@
 const {
     isSongExistsInQueue,
-    isSongsQueueEmpty,
     getHelperVars,
     setHelperVar,
-    addVideoToQueue,
     getSongsQueueLength
 } = require("../functions/general");
 
 const { 
     getYoutubePlaylistId,
-    getYoutubePlaylistName,
     getYoutubeVideoNameByUrl,
-    getYoutubeVideoNameById,
     getYoutubeVideoId,
-    getVideoByKeyWords
+    getVideoIdByKeyWords
 } = require("../functions/youtube");
 
 const {
-    addPlaylistToQueue,
+    addYoutubeVideoToQueueById,
+    addYoutubePlaylistToQueueById,
     playQueue
 } = require("../functions/ytdl-core");
 
 const { 
     getSpotifyTrackIdFromUrl,
     getSpotifyTrack,
-    getSpotifyPlaylistTracksById,
-    getSpotifyPlaylistIdFromUrl,
-    getSpotifyPlaylistNameById
 } = require("../functions/spotify");
 
 const {
-    sendSongAddedEmbedMsg
+    sendSongAddedEmbedMsg, sendPlaylistAddedEmbedMsg
 } = require("../functions/discord");
 
 function determinePlayType(search) {
@@ -38,8 +32,6 @@ function determinePlayType(search) {
         return 'youtube-playlist';
     } else if(search.match(/\?v=.+/)) {
         return 'youtube-song';
-    } else if (search.match(/open\.spotify\.com\/playlist\/[a-zA-Z0-9]+/)) {
-        return 'spotify-playlist';
     } else if(search.match(/open\.spotify\.com\/track\/[a-zA-Z0-9]+/)) {
         return 'spotify-song';
     }
@@ -48,18 +40,17 @@ function determinePlayType(search) {
 
 async function handleYoutubePlaylist(msg, search) {
     const youtubePlaylistId = await getYoutubePlaylistId(search);
-    let youtubePlaylistName = null;
 
-    if(youtubePlaylistId != null) {
-        youtubePlaylistName = await getYoutubePlaylistName(youtubePlaylistId);
-        msg.channel.send(`\`[🎶] Playing playlist: ${youtubePlaylistName}\``);
-        await addPlaylistToQueue(youtubePlaylistId);
-    } else {
+    if(youtubePlaylistId == null) {
         msg.channel.send(`\`[❓] Playlist wasn't found\``);
+        return;
     }
+
+    await sendPlaylistAddedEmbedMsg(msg, search);
+    await addYoutubePlaylistToQueueById(youtubePlaylistId);
 }
 
-async function handleYoutubeSong(msg, search) {
+async function handleYoutubeVideo(msg, search) {
     const youtubeVideoName = await getYoutubeVideoNameByUrl(search);
 
     // video couldn't be reached or already exists in queue
@@ -73,64 +64,34 @@ async function handleYoutubeSong(msg, search) {
 
     // play song or add it to queue
     await sendSongAddedEmbedMsg(msg, search);
-    addVideoToQueue(getYoutubeVideoId(search), youtubeVideoName);
+    await addYoutubeVideoToQueueById(getYoutubeVideoId(search));
 }
 
 async function handleSpotifySong(msg, search) {
     const spotifySongId = await getSpotifyTrackIdFromUrl(search);
     const track         = await getSpotifyTrack(spotifySongId)
 
-    if(track != null) {
-        const youtubeVideoId = await getVideoByKeyWords(track.name);
-
-        if(youtubeVideoId == null) {
-            msg.channel.send(`\`[❌] No song was found\``);
-            return;
-        } else if (youtubeVideoId === 403) {
-            msg.channel.send(`\`[❌] Youtube API reached it's quota for today, try again later\``);
-            return;
-        }
-
-        const youtubeVideoName = await getYoutubeVideoNameById(youtubeVideoId);
-        
-        // play song or add it to queue
-        if(!isSongsQueueEmpty()) {
-            msg.channel.send(`\`[✔️] Added ${youtubeVideoName}\``);
-        } else {
-            msg.channel.send(`\`[🎶] Playing ${youtubeVideoName}\``);
-        }
-
-        addVideoToQueue(youtubeVideoId, youtubeVideoName);
-    } else {
+    if(track == null) {
         msg.channel.send(`\`[❌] No song was found\``);
     }
-}
 
-// leaving spotify playlist handler function here
-// until there will be a way to handle spotify playlists
-// without making so much network usage
-async function handleSpotifyPlaylist(msg, search) {
-    const spotifyPlaylistId = await getSpotifyPlaylistIdFromUrl(search);
+    const youtubeVideoId = await getVideoIdByKeyWords(track.name);
 
-    if(spotifyPlaylistId == null) {
-        msg.channel.send(`\`[❌] No playlist was found\``);
+    if(youtubeVideoId == null) {
+        msg.channel.send(`\`[❌] No song was found\``);
+        return;
+    } else if (youtubeVideoId === 403) {
+        msg.channel.send(`\`[❌] Youtube API reached it's quota for today, try again later\``);
         return;
     }
-
-    const playlistName   = await getSpotifyPlaylistNameById(spotifyPlaylistId)
-    const playlistTracks = await getSpotifyPlaylistTracksById(spotifyPlaylistId);
-
-    for (let playlistTrack of playlistTracks) {
-        const youtubeVideoId = await getVideoByKeyWords(playlistTrack.name);
-        const youtubeVideoName = await getYoutubeVideoNameById(youtubeVideoId);
-        addVideoToQueue(youtubeVideoId, youtubeVideoName);
-      }
-
-    msg.channel.send(`\`[✔️] Added ${playlistName}\``);
+    
+    // play song or add it to queue
+    await sendSongAddedEmbedMsg(msg, `https://www.youtube.com/watch?v=${youtubeVideoId}`);
+    await addYoutubeVideoToQueueById(youtubeVideoId);
 }
 
 async function handleYoutubeSearch(msg, search) {
-    const youtubeVideoId = await getVideoByKeyWords(search);
+    const youtubeVideoId = await getVideoIdByKeyWords(search);
 
     if(youtubeVideoId == null) {
         msg.channel.send(`\`[❌] No video was found\``);
@@ -140,16 +101,8 @@ async function handleYoutubeSearch(msg, search) {
         return;
     }
 
-    const youtubeVideoName = await getYoutubeVideoNameById(youtubeVideoId);
-    
-    // play song or add it to queue
-    if(!isSongsQueueEmpty()) {
-        msg.channel.send(`\`[✔️] Added ${youtubeVideoName}\``);
-    } else {
-        msg.channel.send(`\`[🎶] Playing ${youtubeVideoName}\``);
-    }
-
-    addVideoToQueue(youtubeVideoId, youtubeVideoName);
+    await sendSongAddedEmbedMsg(msg, `https://www.youtube.com/watch?v=${youtubeVideoId}`);
+    await addYoutubeVideoToQueueById(youtubeVideoId);
 }
 
 async function _play(msg) {
@@ -170,7 +123,7 @@ async function _play(msg) {
         break;
 
         case 'youtube-song':
-            await handleYoutubeSong(msg, search);
+            await handleYoutubeVideo(msg, search);
         break;
 
         case 'spotify-playlist':

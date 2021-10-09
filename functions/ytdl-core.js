@@ -9,19 +9,21 @@ const {
 
 const {
     removePlayedSongFromQueue, 
-    addSongToQueue,
+    addYoutubePlaylistToQueue,
     setHelperVar,
     getSongsQueueLength,
     getSongsQueue,
     getHelperVars,
     initHelperVars,
     initSongsQueue,
-    clearQueue
+    clearQueue,
+    addYoutubeVideoToQueue
 } = require('./general');
 
 const {
-    getYoutubePlaylistSongs,
-    getYoutubeVideoLengthInSecondsById
+    getYoutubePlaylistSongsById,
+    getYoutubeVideoLengthInSecondsById,
+    getYoutubeVideoDataById
 } = require('./youtube');
 
 const { 
@@ -93,6 +95,7 @@ async function playQueue(msg) {
                 }
             }
 
+            setHelperVar('songCurrentPosition', getPlayingSongCurrentPosition());
             await new Promise(resolve => setTimeout(resolve, 3000))
             const { isBotDisconnected } = getHelperVars();
 
@@ -132,12 +135,14 @@ async function playQueue(msg) {
     setHelperVar('isBotPlayingSongs', false);
 }
 
-async function addPlaylistToQueue(youtubePlaylistId) {
-    const youtubePlaylistSongs = await getYoutubePlaylistSongs(youtubePlaylistId)
-    
-    youtubePlaylistSongs.forEach((video) => {
-        addSongToQueue(video.snippet.resourceId.videoId,video.snippet.title)
-    });
+async function addYoutubeVideoToQueueById(youtubeVideoId) {
+    const youtubeVideo = await getYoutubeVideoDataById(youtubeVideoId)
+    addYoutubeVideoToQueue(youtubeVideo);
+}
+
+async function addYoutubePlaylistToQueueById(youtubePlaylistId) {
+    const youtubePlaylist = await getYoutubePlaylistSongsById(youtubePlaylistId);
+    addYoutubePlaylistToQueue(youtubePlaylist);
 }
 
 async function stopSong() {
@@ -165,8 +170,10 @@ async function skipToSong(index) {
     setHelperVar('queueDisplayPageIndex',0);
 }
 
-async function getPlayingSongCurrentPosition() {
-    return Number(globalPlayer.state.resource.playbackDuration/1000);
+function getPlayingSongCurrentPosition() {
+    if(globalPlayer.state.resource) {
+        return Number(globalPlayer.state.resource.playbackDuration/1000);
+    }
 }
 
 async function forwardPlayingSong(secondsToAdd) {
@@ -219,16 +226,17 @@ async function loop(msg) {
 }
 
 
-exports.getSongResource               = getSongResource;
-exports.playSong                      = playSong;
-exports.playQueue                     = playQueue;
-exports.addPlaylistToQueue            = addPlaylistToQueue;
-exports.stopSong                      = stopSong;
-exports.resumeSong                    = resumeSong;
-exports.skipSong                      = skipSong;
-exports.skipToSong                    = skipToSong;
-exports.getPlayingSongCurrentPosition = getPlayingSongCurrentPosition;
-exports.forwardPlayingSong            = forwardPlayingSong;
-exports.rewindPlayingSong             = rewindPlayingSong;
-exports.goToTimeInPlayingSong         = goToTimeInPlayingSong;
-exports.loop                          = loop;
+exports.getSongResource                 = getSongResource;
+exports.playSong                        = playSong;
+exports.playQueue                       = playQueue;
+exports.addYoutubeVideoToQueueById      = addYoutubeVideoToQueueById;
+exports.addYoutubePlaylistToQueueById   = addYoutubePlaylistToQueueById;
+exports.stopSong                        = stopSong;
+exports.resumeSong                      = resumeSong;
+exports.skipSong                        = skipSong;
+exports.skipToSong                      = skipToSong;
+exports.getPlayingSongCurrentPosition   = getPlayingSongCurrentPosition;
+exports.forwardPlayingSong              = forwardPlayingSong;
+exports.rewindPlayingSong               = rewindPlayingSong;
+exports.goToTimeInPlayingSong           = goToTimeInPlayingSong;
+exports.loop                            = loop;
