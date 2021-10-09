@@ -46,21 +46,21 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
             if(pageHasOver10Songs) {
                 songsQueue
                 .slice(startIndex * 10 + 1, startIndex * 10 + 10)
-                .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
+                .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n\n`); counter++});
             } else {
                 songsQueue
                 .slice(startIndex * 10 + 1, startIndex * 10 + songsQueueLength - startIndex * 10)
-                .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
+                .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n\n`); counter++});
             }
         } else {
             if(pageHasOver10Songs) {
                 songsQueue
                 .slice(startIndex * 10, startIndex * 10 + 10)
-                .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
+                .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n\n`); counter++});
             } else {
                 songsQueue
                 .slice(startIndex * 10, startIndex * 10 + songsQueueLength - startIndex * 10)
-                .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n`); counter++});
+                .forEach(x => {queueString = queueString.concat(`**${counter}.** \`${x.name}\`\n\n`); counter++});
             }
         }
 
@@ -72,7 +72,7 @@ async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
             .setTitle('Queue')
             .setThumbnail(MELODY_ICON)
             .addFields(
-                { name: 'Now Playing', value: `**1.** \`${songsQueue[0].name}\``}
+                { name: 'Now Playing', value: `**1. ${songsQueue[0].name}**`}
             )
         }
 
