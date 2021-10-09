@@ -21,7 +21,10 @@ const {
 } = require('./general');
 
 const {
-    getYoutubeVideoDataByUrl, youtubeVideoDurationFormatToSeconds
+    getYoutubeVideoDataByUrl,
+    youtubeVideoDurationFormatToSeconds,
+    getYoutubePlayistDataByUrl,
+    getYoutubeVideoDataById
 } = require('./youtube');
 
 async function sendQueueEmbededMsg(startIndex, originalMsg, editEmbed=false) {
@@ -185,23 +188,6 @@ async function sendHelpEmbedMsg(originalMsg) {
     originalMsg.channel.send({ embeds: [embed] });
 }
 
-async function getNowPlaying(originalMsg) {
-    const song = (await getSongsQueue())[0];
-
-    const embed = new MessageEmbed()
-    .setColor(EMBED_MSG_COLOR_SCHEME)
-    .setTitle('Now Playing')
-    .setThumbnail(MELODY_ICON)
-    .addFields(
-        { name: 'Song', value: `\`${song.name}\``}
-    )
-    .addFields(
-        { name: 'Link', value: `[https://www.youtube.com/watch?v=${song.id}](https://www.youtube.com/watch?v=${song.id})`}
-    )
-
-    originalMsg.channel.send({ embeds: [embed] });
-}
-
 async function isMsgFromDevServer(msg) {
     const { DEV_SERVER_ID } = require(CONFIG_FILE);
 
@@ -315,8 +301,50 @@ async function clientLogin(client) {
     }
 }
 
-function convertSecondsToDurationString(seconds) {
-    return `    ▬▬▬▬▬▬▬▬  ${new Date(seconds * 1000).toISOString().substr(11, 8)}`
+function getTimelineString(currentTime, totalTime) {
+    const ratio = parseInt(currentTime / totalTime * 10);
+    let string = "";
+
+    for(let i = 1; i <= 10; i++) {
+        if(i == ratio) {
+            string = string.concat("#");
+        } else {
+            string = string.concat("▬");
+        }
+    }
+
+    return string;
+}
+
+async function convertSecondsToDurationString(seconds, sendCurrentPosition=false) {
+    const totalTimeString = new Date(seconds * 1000).toISOString().substr(11, 8);
+
+    if(!sendCurrentPosition) {
+        return `   ▬▬▬▬▬▬▬▬▬▬  ${totalTimeString}`
+    }
+
+    const { songCurrentPosition } = getHelperVars();
+    const songCurrentPositionInSeconds = parseInt(songCurrentPosition);
+
+    try {
+        const currentTimeString = new Date(songCurrentPositionInSeconds * 1000).toISOString().substr(11, 8)
+        const timelineString = getTimelineString(songCurrentPositionInSeconds, seconds);
+        return `    ${timelineString}   ${currentTimeString}/${totalTimeString}`;
+    } catch (error) { return null }
+}
+
+function getHighestResImage(thumbnails) {
+    if(thumbnails.hasOwnProperty('maxres')) {
+        return thumbnails.maxres.url;
+    } else if(thumbnails.hasOwnProperty('standard')) {
+        return thumbnails.standard.url;
+    } else if(thumbnails.hasOwnProperty('high')) {
+        return thumbnails.high.url;
+    } else if(thumbnails.hasOwnProperty('medium')) {
+        return thumbnails.medium.url;
+    } else if(thumbnails.hasOwnProperty('default')) {
+        return thumbnails.default.url;
+    }
 }
 
 async function sendSongAddedEmbedMsg(msg, youtubeVideoUrl) {
@@ -326,8 +354,10 @@ async function sendSongAddedEmbedMsg(msg, youtubeVideoUrl) {
 
     const youtubeVideoTitle          = youtubeVideoData.snippet.title;
     const youtubeVideoChannelName    = youtubeVideoData.snippet.channelTitle;
-    const youtubeVideoThumbnail      = youtubeVideoData.snippet.thumbnails.maxres.url;
-    const youtubeVideoDurationString = convertSecondsToDurationString(youtubeVideoDurationFormatToSeconds(youtubeVideoData.contentDetails.duration));
+    const youtubeVideoThumbnail      = getHighestResImage(youtubeVideoData.snippet.thumbnails);
+    const youtubeVideoDurationString = await convertSecondsToDurationString(youtubeVideoDurationFormatToSeconds(youtubeVideoData.contentDetails.duration));
+
+    if(youtubeVideoDurationString == null) { return }
 
     const status = getSongsQueueLength() == 0 ? 'Playing' : 'Added to queue';
 
@@ -348,15 +378,73 @@ async function sendSongAddedEmbedMsg(msg, youtubeVideoUrl) {
     msg.channel.send({ embeds: [embed] });
 }
 
-exports.sendQueueEmbededMsg     = sendQueueEmbededMsg;
-exports.sendHelpEmbedMsg        = sendHelpEmbedMsg;
-exports.getNowPlaying           = getNowPlaying;
-exports.isMsgFromDevServer      = isMsgFromDevServer;
-exports.isBotAloneInVC          = isBotAloneInVC;
-exports.swapMelodyStatus        = swapMelodyStatus;
-exports.setMelodyStatus         = setMelodyStatus;
-exports.clientLogin             = clientLogin;
-exports.queueButtonHandler      = queueButtonHandler;
-exports.voiceStateUpdateHandler = voiceStateUpdateHandler;
-exports.swapMelodyActivity      = swapMelodyActivity;
-exports.sendSongAddedEmbedMsg   = sendSongAddedEmbedMsg;
+async function sendPlaylistAddedEmbedMsg(msg, youtubePlaylistUrl) {
+    const youtubePlaylistData = await getYoutubePlayistDataByUrl(youtubePlaylistUrl)
+
+    if(youtubePlaylistData == null) return;
+
+    const youtubePlaylistTitle          = youtubePlaylistData.snippet.title;
+    const youtubePlaylistChannelName    = youtubePlaylistData.snippet.channelTitle;
+    const youtubePlaylistThumbnail      = getHighestResImage(youtubePlaylistData.snippet.thumbnails.high.url);
+    const numberOfSongs                 = youtubePlaylistData.contentDetails.itemCount;
+
+    const status = getSongsQueueLength() == 0 
+                    ? `Playing ${numberOfSongs} songs`
+                    : `Added ${numberOfSongs} songs to queue`;
+
+    const embed = new MessageEmbed()
+    .setColor(EMBED_MSG_COLOR_SCHEME)
+    .setTitle(status)
+    .setThumbnail(youtubePlaylistThumbnail)
+    .addFields(
+        { name: 'Title', value: youtubePlaylistTitle }
+    )
+    .addFields(
+        { name: 'Playlist', value: `[${youtubePlaylistUrl}](${youtubePlaylistUrl})`, inline: true }
+    )
+    .addFields(
+        { name: 'Channel', value: youtubePlaylistChannelName, inline: true }
+    );
+
+    msg.channel.send({ embeds: [embed] });
+}
+
+async function sendNowPlayingEmbedMsg(originalMsg) {
+    const video = (getSongsQueue())[0];
+    const youtubeVideoUrl               = `https://www.youtube.com/watch?v=${video.id}`;
+    const youtubeVideoData              = await getYoutubeVideoDataById(video.id);
+    const youtubeVideoTitle             = youtubeVideoData.snippet.title;
+    const youtubeVideoChannelName       = youtubeVideoData.snippet.channelTitle;
+    const youtubeVideoThumbnail         = getHighestResImage(youtubeVideoData.snippet.thumbnails);
+    const youtubeVideoDurationString    = await convertSecondsToDurationString(youtubeVideoDurationFormatToSeconds(youtubeVideoData.contentDetails.duration), true);
+
+    const embed = new MessageEmbed()
+    .setColor(EMBED_MSG_COLOR_SCHEME)
+    .setTitle(youtubeVideoTitle)
+    .setThumbnail(youtubeVideoThumbnail)
+    .addFields(
+        { name: 'Status', value: youtubeVideoDurationString }
+    )
+    .addFields(
+        { name: 'Video', value: `[${youtubeVideoUrl}](${youtubeVideoUrl})`, inline: true }
+    )
+    .addFields(
+        { name: 'Channel', value: youtubeVideoChannelName, inline: true }
+    );
+
+    originalMsg.channel.send({ embeds: [embed] });
+}
+
+exports.sendQueueEmbededMsg         = sendQueueEmbededMsg;
+exports.sendHelpEmbedMsg            = sendHelpEmbedMsg;
+exports.sendNowPlayingEmbedMsg      = sendNowPlayingEmbedMsg;
+exports.isMsgFromDevServer          = isMsgFromDevServer;
+exports.isBotAloneInVC              = isBotAloneInVC;
+exports.swapMelodyStatus            = swapMelodyStatus;
+exports.setMelodyStatus             = setMelodyStatus;
+exports.clientLogin                 = clientLogin;
+exports.queueButtonHandler          = queueButtonHandler;
+exports.voiceStateUpdateHandler     = voiceStateUpdateHandler;
+exports.swapMelodyActivity          = swapMelodyActivity;
+exports.sendSongAddedEmbedMsg       = sendSongAddedEmbedMsg;
+exports.sendPlaylistAddedEmbedMsg   = sendPlaylistAddedEmbedMsg
