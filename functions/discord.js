@@ -435,6 +435,10 @@ async function sendNowPlayingEmbedMsg(originalMsg) {
     originalMsg.channel.send({ embeds: [embed] });
 }
 
+function userHasRole(msg, roleName) {
+    return msg.member.roles.cache.some(role => role.name === roleName);
+}
+
 exports.sendQueueEmbededMsg         = sendQueueEmbededMsg;
 exports.sendHelpEmbedMsg            = sendHelpEmbedMsg;
 exports.sendNowPlayingEmbedMsg      = sendNowPlayingEmbedMsg;
@@ -448,3 +452,4 @@ exports.voiceStateUpdateHandler     = voiceStateUpdateHandler;
 exports.swapMelodyActivity          = swapMelodyActivity;
 exports.sendSongAddedEmbedMsg       = sendSongAddedEmbedMsg;
 exports.sendPlaylistAddedEmbedMsg   = sendPlaylistAddedEmbedMsg
+exports.userHasRole                 = userHasRole;

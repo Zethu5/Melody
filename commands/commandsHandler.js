@@ -28,29 +28,71 @@ const { queue }         = require('./queue');
 const { nowPlaying }    = require('./nowPlaying');
 const { help }          = require('./help');
 
+const {
+    userHasRole
+} = require('../functions/discord');
+
+const roleNeeded = 'ADMINS';
+
 async function _commandsHandler(msg) {
     const command = msg.content;
 
     if(command.match(regexPlayCmd)) {
         await play(msg);
     } else if(command.match(regexStopCmd)) {
-        await stop(msg);
+        if(userHasRole(msg, roleNeeded)) {
+            await stop(msg);
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
     } else if (command.match(regexResumeCmd)) {
-        await resume(msg);
+        if(userHasRole(msg, roleNeeded)) {
+            await resume(msg);
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
     } else if (command.match(regexSkipCmd)) {
-        await skip(msg);
+        if(userHasRole(msg, roleNeeded)) {
+            await skip(msg);
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
     } else if (command.match(regexSkipToSongCmd)) {
-        await skipTo(msg);
+        if(userHasRole(msg, roleNeeded)) {
+            await skipTo(msg);
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
     } else if (command.match(regexLoopCmd)) {
-        await loop(msg);
+        if(userHasRole(msg, roleNeeded)) {
+            await loop(msg);
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
     } else if (command.match(regexForwardCmd)) {
-        await forward(msg);
+        if(userHasRole(msg, roleNeeded)) {
+            await forward(msg);
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
     } else if (command.match(regexRewindCmd)) {
-        await rewind(msg);
+        if(userHasRole(msg, roleNeeded)) {
+            await rewind(msg);
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
     } else if (command.match(regexSeekCmd)) {
-        await seek(msg);
+        if(userHasRole(msg, roleNeeded)) {
+         await seek(msg);   
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
     } else if (command.match(regexClearCmd)) {
-        await clear(msg);
+        if(userHasRole(msg, roleNeeded)) {
+            await clear(msg);   
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
     } else if (command.match(regexQueueCmd)) {
         await queue(msg);
     } else if (command.match(regexNowPlayingCmd)) {
