@@ -53,8 +53,12 @@ function getSongResource(youtubeVideoId, seek=null) {
 
 async function playSong(connection, player, youtubeVideoId, seek=null) {
     const resource = getSongResource(youtubeVideoId, seek);
-    player.play(resource);
-    connection.subscribe(player);
+    try {
+        player.play(resource);
+        connection.subscribe(player);
+    } catch(error) {
+        console.log(error);
+    }
 
     if(seek == null) {
         setHelperVar('positionInSong',0);
