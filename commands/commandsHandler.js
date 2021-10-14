@@ -10,7 +10,8 @@ const {
     regexSeekCmd, 
     regexClearCmd, 
     regexQueueCmd, 
-    regexNowPlayingCmd, 
+    regexNowPlayingCmd,
+    regexPlayTopCmd,
     regexHelpCmd
 } = require('./commandsRegex');
 
@@ -26,6 +27,7 @@ const { seek }          = require('./seek');
 const { clear }         = require('./clear');
 const { queue }         = require('./queue');
 const { nowPlaying }    = require('./nowPlaying');
+const { playTop }       = require('./playTop');
 const { help }          = require('./help');
 
 const {
@@ -90,6 +92,12 @@ async function _commandsHandler(msg) {
     } else if (command.match(regexClearCmd)) {
         if(userHasRole(msg, roleNeeded)) {
             await clear(msg);   
+        } else {
+            msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
+        }
+    } else if (command.match(regexPlayTopCmd)) {
+        if(userHasRole(msg, roleNeeded)) {
+            await playTop(msg);   
         } else {
             msg.channel.send(`\`[❌] You do not have the appropriate role - ${roleNeeded}\``);
         }

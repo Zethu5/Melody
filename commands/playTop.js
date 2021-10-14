@@ -1,56 +1,31 @@
 const {
-    isSongExistsInQueue,
-    getHelperVars,
-    setHelperVar,
-    getSongsQueueLength
+    sendSongAddedEmbedMsg
+} = require("../functions/discord");
+
+const {
+    isSongExistsInQueue, getHelperVars, getSongsQueueLength, setHelperVar
 } = require("../functions/general");
 
-const { 
-    getYoutubePlaylistId,
+const {
+    getSpotifyTrackIdFromUrl,
+    getSpotifyTrack
+} = require("../functions/spotify");
+
+const {
     getYoutubeVideoNameByUrl,
     getYoutubeVideoId,
     getVideoIdByKeyWords
 } = require("../functions/youtube");
 
 const {
-    addYoutubeVideoToQueueById,
-    addYoutubePlaylistToQueueById,
-    playQueue
+    addYoutubeVideoToQueueFirstPositionById, playQueue
 } = require("../functions/ytdl-core");
 
-const { 
-    getSpotifyTrackIdFromUrl,
-    getSpotifyTrack,
-} = require("../functions/spotify");
-
 const {
-    sendSongAddedEmbedMsg, sendPlaylistAddedEmbedMsg
-} = require("../functions/discord");
+    determinePlayType
+} = require("./play");
 
-function determinePlayType(search) {
-    if(search.match(/[&?]list=([^&]+)/)) {
-        return 'youtube-playlist';
-    } else if(search.match(/\?v=.+/)) {
-        return 'youtube-song';
-    } else if(search.match(/open\.spotify\.com\/track\/[a-zA-Z0-9]+/)) {
-        return 'spotify-song';
-    }
-    return 'youtube-search';
-}
-
-async function handleYoutubePlaylist(msg, search) {
-    const youtubePlaylistId = await getYoutubePlaylistId(search);
-
-    if(youtubePlaylistId == null) {
-        msg.channel.send(`\`[❓] Playlist wasn't found\``);
-        return;
-    }
-
-    await sendPlaylistAddedEmbedMsg(msg, search);
-    await addYoutubePlaylistToQueueById(youtubePlaylistId);
-}
-
-async function handleYoutubeVideo(msg, search) {
+async function handleYoutubeVideoPlayTop(msg, search) {
     const youtubeVideoName = await getYoutubeVideoNameByUrl(search);
 
     // video couldn't be reached or already exists in queue
@@ -64,10 +39,10 @@ async function handleYoutubeVideo(msg, search) {
 
     // play song or add it to queue
     await sendSongAddedEmbedMsg(msg, search);
-    await addYoutubeVideoToQueueById(getYoutubeVideoId(search));
+    await addYoutubeVideoToQueueFirstPositionById(getYoutubeVideoId(search));
 }
 
-async function handleSpotifySong(msg, search) {
+async function handleSpotifySongPlayTop(msg, search) {
     const spotifySongId = await getSpotifyTrackIdFromUrl(search);
     const track         = await getSpotifyTrack(spotifySongId)
 
@@ -87,10 +62,10 @@ async function handleSpotifySong(msg, search) {
     
     // play song or add it to queue
     await sendSongAddedEmbedMsg(msg, `https://www.youtube.com/watch?v=${youtubeVideoId}`);
-    await addYoutubeVideoToQueueById(youtubeVideoId);
+    await addYoutubeVideoToQueueFirstPositionById(youtubeVideoId);
 }
 
-async function handleYoutubeSearch(msg, search) {
+async function handleYoutubeSearchPlayTop(msg, search) {
     const youtubeVideoId = await getVideoIdByKeyWords(search);
 
     if(youtubeVideoId == null) {
@@ -102,19 +77,21 @@ async function handleYoutubeSearch(msg, search) {
     }
 
     await sendSongAddedEmbedMsg(msg, `https://www.youtube.com/watch?v=${youtubeVideoId}`);
-    await addYoutubeVideoToQueueById(youtubeVideoId);
+    await addYoutubeVideoToQueueFirstPositionById(youtubeVideoId);
 }
 
-async function handleSongType(msg, search) {
+async function _playTop(msg) {
+    const search = msg.content.replace(/^(\!pt|\!playtop)\s/,'');
+    msg.channel.send(`\`[🔎] Searching ${search}\``);
     const playType = determinePlayType(search);
 
     switch(playType) {
         case 'youtube-playlist':
-            await handleYoutubePlaylist(msg, search);
+            msg.channel.send(`\`[❌] '!playtop' command doesn not support playlists\``);
         break;
 
         case 'youtube-song':
-            await handleYoutubeVideo(msg, search);
+            await handleYoutubeVideoPlayTop(msg, search);
         break;
 
         case 'spotify-playlist':
@@ -123,26 +100,13 @@ async function handleSongType(msg, search) {
         break;
 
         case 'spotify-song':
-            await handleSpotifySong(msg, search);
+            await handleSpotifySongPlayTop(msg, search);
         break;
 
         case 'youtube-search':
-            await handleYoutubeSearch(msg, search);
+            await handleYoutubeSearchPlayTop(msg, search);
         break;
     }
-}
-
-async function _play(msg) {
-    // check if user is connected to a voice channel
-    if(!msg.member.voice.channel) {
-        msg.channel.send(`\`[❗] You're not connected to a voice channel\``);
-        return;
-    }
-
-    // try to play the song
-    const search = msg.content.replace(/^(\!p|\!play)\s/,'');
-    await handleSongType(msg, search);
-    msg.channel.send(`\`[🔎] Searching ${search}\``);
 
     // start playing queue in nothing is playing now
     const { isBotPlayingSongs } = getHelperVars();
@@ -154,5 +118,4 @@ async function _play(msg) {
     }
 }
 
-exports.determinePlayType   = determinePlayType;
-exports.play                = _play;
+exports.playTop = _playTop;

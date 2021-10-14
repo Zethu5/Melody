@@ -10,4 +10,5 @@ exports.regexRewindCmd      = /^(\!rw|\!rewind)\s\d+$/;
 exports.regexSeekCmd        = /^(\!sk|\!seek)\s\d+$/;
 exports.regexNowPlayingCmd  = /^(\!np|\!nowplaying)$/;
 exports.regexLoopCmd        = /^(\!lp|\!loop)$/;
+exports.regexPlayTopCmd     = /^(\!pt|\!playtop)\s.+$/;
 exports.regexHelpCmd        = /^(\!h|\!help)$/;

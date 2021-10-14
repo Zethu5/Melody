@@ -174,6 +174,7 @@ async function sendHelpEmbedMsg(originalMsg) {
     **!sk / !seek <seconds>**          - \`Go to specific time in the song\`
     **!np / !nowplaying**              - \`Shows currently playing song\`
     **!lp / !loop**                    - \`Loops song\`
+    **!pt / !playtop**                 - \`Moves the song to first position in queue\`
     **!h  / !help**                    - \`See this help\`
     `
     

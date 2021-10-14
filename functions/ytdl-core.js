@@ -17,7 +17,8 @@ const {
     initHelperVars,
     initSongsQueue,
     clearQueue,
-    addYoutubeVideoToQueue
+    addYoutubeVideoToQueue,
+    addYoutubeVideoToQueueFirstPosition
 } = require('./general');
 
 const {
@@ -144,6 +145,11 @@ async function addYoutubeVideoToQueueById(youtubeVideoId) {
     addYoutubeVideoToQueue(youtubeVideo);
 }
 
+async function addYoutubeVideoToQueueFirstPositionById(youtubeVideoId) {
+    const youtubeVideo = await getYoutubeVideoDataById(youtubeVideoId)
+    addYoutubeVideoToQueueFirstPosition(youtubeVideo);
+}
+
 async function addYoutubePlaylistToQueueById(youtubePlaylistId) {
     const youtubePlaylist = await getYoutubePlaylistSongsById(youtubePlaylistId);
     addYoutubePlaylistToQueue(youtubePlaylist);
@@ -230,17 +236,18 @@ async function loop(msg) {
 }
 
 
-exports.getSongResource                 = getSongResource;
-exports.playSong                        = playSong;
-exports.playQueue                       = playQueue;
-exports.addYoutubeVideoToQueueById      = addYoutubeVideoToQueueById;
-exports.addYoutubePlaylistToQueueById   = addYoutubePlaylistToQueueById;
-exports.stopSong                        = stopSong;
-exports.resumeSong                      = resumeSong;
-exports.skipSong                        = skipSong;
-exports.skipToSong                      = skipToSong;
-exports.getPlayingSongCurrentPosition   = getPlayingSongCurrentPosition;
-exports.forwardPlayingSong              = forwardPlayingSong;
-exports.rewindPlayingSong               = rewindPlayingSong;
-exports.goToTimeInPlayingSong           = goToTimeInPlayingSong;
-exports.loop                            = loop;
+exports.getSongResource                         = getSongResource;
+exports.playSong                                = playSong;
+exports.playQueue                               = playQueue;
+exports.addYoutubeVideoToQueueById              = addYoutubeVideoToQueueById;
+exports.addYoutubeVideoToQueueFirstPositionById = addYoutubeVideoToQueueFirstPositionById;
+exports.addYoutubePlaylistToQueueById           = addYoutubePlaylistToQueueById;
+exports.stopSong                                = stopSong;
+exports.resumeSong                              = resumeSong;
+exports.skipSong                                = skipSong;
+exports.skipToSong                              = skipToSong;
+exports.getPlayingSongCurrentPosition           = getPlayingSongCurrentPosition;
+exports.forwardPlayingSong                      = forwardPlayingSong;
+exports.rewindPlayingSong                       = rewindPlayingSong;
+exports.goToTimeInPlayingSong                   = goToTimeInPlayingSong;
+exports.loop                                    = loop;

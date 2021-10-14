@@ -82,6 +82,15 @@ function addYoutubeVideoToQueue(youtubeVideo) {
     setSongsQueue(songsQueue);
 }
 
+function addYoutubeVideoToQueueFirstPosition(youtubeVideo) {
+    let songsQueue = getSongsQueue();
+    songsQueue.splice(1, 0, {
+        'id': youtubeVideo.id,
+        'name': youtubeVideo.snippet.title,
+    });
+    setSongsQueue(songsQueue);
+}
+
 function addYoutubePlaylistToQueue(youtubePlaylist) {
     let songsQueue = getSongsQueue();
     youtubePlaylist.forEach((youtubeVideo) => {
@@ -113,18 +122,19 @@ function base64Encode(str) {
     return Buffer.from(str).toString('base64');
 }
 
-exports.getSongsQueue                   = getSongsQueue;
-exports.setSongsQueue                   = setSongsQueue;
-exports.initSongsQueue                  = initSongsQueue;
-exports.isSongsQueueEmpty               = isSongsQueueEmpty;
-exports.getSongsQueueLength             = getSongsQueueLength;
-exports.getHelperVars                   = getHelperVars;
-exports.setHelperVars                   = setHelperVars;
-exports.setHelperVar                    = setHelperVar;
-exports.initHelperVars                  = initHelperVars;
-exports.removePlayedSongFromQueue       = removePlayedSongFromQueue;
-exports.addYoutubeVideoToQueue          = addYoutubeVideoToQueue;
-exports.addYoutubePlaylistToQueue       = addYoutubePlaylistToQueue;
-exports.clearQueue                      = clearQueue;
-exports.isSongExistsInQueue             = isSongExistsInQueue;
-exports.base64Encode                    = base64Encode;
+exports.getSongsQueue                       = getSongsQueue;
+exports.setSongsQueue                       = setSongsQueue;
+exports.initSongsQueue                      = initSongsQueue;
+exports.isSongsQueueEmpty                   = isSongsQueueEmpty;
+exports.getSongsQueueLength                 = getSongsQueueLength;
+exports.getHelperVars                       = getHelperVars;
+exports.setHelperVars                       = setHelperVars;
+exports.setHelperVar                        = setHelperVar;
+exports.initHelperVars                      = initHelperVars;
+exports.removePlayedSongFromQueue           = removePlayedSongFromQueue;
+exports.addYoutubeVideoToQueue              = addYoutubeVideoToQueue;
+exports.addYoutubeVideoToQueueFirstPosition = addYoutubeVideoToQueueFirstPosition
+exports.addYoutubePlaylistToQueue           = addYoutubePlaylistToQueue;
+exports.clearQueue                          = clearQueue;
+exports.isSongExistsInQueue                 = isSongExistsInQueue;
+exports.base64Encode                        = base64Encode;
