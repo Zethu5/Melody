@@ -49,6 +49,7 @@ process.on('uncaughtException', function(err) {
 client.once('ready', async () => {
     initSongsQueue();
     initHelperVars();
+    setHelperVar('isBotPlayingSongs', false)
     await swapMelodyActivity(client);
     DEV ? console.log("Melody DEV Online!"): console.log("Melody Online!");
 });
