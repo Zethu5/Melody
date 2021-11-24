@@ -143,6 +143,10 @@ async function _play(msg) {
     const search = msg.content.replace(/^(\!p|\!play)\s/,'');
     await msg.channel.send(`\`[🔎] Searching ${search}\``);
     await handleSongType(msg, search);
+<<<<<<< HEAD
+=======
+    await msg.channel.send(`\`[🔎] Searching ${search}\``);
+>>>>>>> 422b38ba86a96d7c537d8e80bc0fa5fb97c745ea
 
     // start playing queue in nothing is playing now
     const { isBotPlayingSongs } = getHelperVars();
