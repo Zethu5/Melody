@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  melody:
+    image: melody_dev:V1.6
+    healthcheck:
+      test: ["CMD", "/bin/bash", "./health_check.sh"]
+      interval: 5s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+    restart: always
+    network_mode: host

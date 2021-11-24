@@ -1,6 +1,7 @@
 
 
 const { Client, Intents } = require('discord.js');
+const fs = require('fs');
 
 const client = new Client({ intents: [
         Intents.FLAGS.GUILDS, 
@@ -28,12 +29,22 @@ const {
 const {
     initSongsQueue,
     initHelperVars,
+    setHelperVar,
 } = require('./functions/general')
 
 const {
     queueButtonHandler,
     isMsgFromDevServer
 } = require('./functions/discord')
+
+
+var access = fs.createWriteStream('./info.log');
+process.stdout.write = process.stderr.write = access.write.bind(access);
+
+process.on('uncaughtException', function(err) {
+    console.error((err && err.stack) ? err.stack : err);
+});
+
 
 client.once('ready', async () => {
     initSongsQueue();
